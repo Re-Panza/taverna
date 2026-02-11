@@ -21,8 +21,8 @@ const leaderboardList = document.getElementById('leaderboard-list');
 
 // --- REGOLE ---
 const RULES = {
-    'cosciotto': "Trascina il cestino 🧺.<br>Prendi il cibo, evita le bombe!",
-    'ratti': "Tocca i topi 🐭 appena escono dai buchi.",
+    'cosciotto': "Trascina il cestino 🧺 col dito.<br>Prendi il cibo, evita le bombe 💣!",
+    'ratti': "Tocca i topi 🐭 appena escono dai buchi.<br>Sii veloce!",
     'freccette': "Tira quando il centro è allineato col verde.",
     'barili': "Impila i barili.<br>Tocca per fermare il blocco.",
     'simon': "Memorizza la sequenza di luci e ripetila."
@@ -52,14 +52,14 @@ function startGameLogic() {
     instructionsPanel.classList.add('hidden');
     gameActive = true;
     
-    // Piccola pausa per assicurarsi che il DOM sia renderizzato (Fix dimensioni 0)
+    // FIX SCHERMATA NERA: Aspetta che il browser abbia disegnato il box
     setTimeout(() => {
         if (currentGame === 'cosciotto') initCosciotto();
         else if (currentGame === 'ratti') initRatti();
         else if (currentGame === 'freccette') initFreccette();
         else if (currentGame === 'barili') initBarili();
         else if (currentGame === 'simon') initSimon();
-    }, 100);
+    }, 300); // 300ms di ritardo per sicurezza
 }
 
 function closeGame() {
@@ -93,10 +93,10 @@ function gameOver() {
 
 function resetGame() {
     stopAllGames();
-    // Non chiudere il modale, riavvia solo la logica UI
     gameStage.innerHTML = '';
     saveForm.classList.add('hidden');
-    instructionsPanel.classList.remove('hidden'); 
+    // Riavvia direttamente la logica dopo breve pausa
+    setTimeout(startGameLogic, 100);
 }
 
 function flashStage(color) {
@@ -107,21 +107,20 @@ function flashStage(color) {
 
 // --- GIOCHI ---
 
-// 1. COSCIOTTO (Fix Coordinate)
+// 1. COSCIOTTO
 function initCosciotto() {
     gameStage.innerHTML = `<div id="basket">🧺</div>`;
     const basket = document.getElementById('basket');
     
-    // Posizione iniziale Cestino (Centro)
-    basket.style.left = (gameStage.offsetWidth / 2 - 40) + 'px';
+    // Forza ricalcolo dimensioni
+    const stageW = gameStage.offsetWidth;
+    basket.style.left = (stageW / 2 - 40) + 'px';
 
     function move(xInput) {
         if (!gameActive) return;
         const rect = gameStage.getBoundingClientRect();
         let x = xInput - rect.left - 40;
-        // Limiti
-        if (x < 0) x = 0; 
-        if (x > rect.width - 80) x = rect.width - 80;
+        if (x < 0) x = 0; if (x > rect.width - 80) x = rect.width - 80;
         basket.style.left = x + 'px';
     }
     
@@ -133,7 +132,6 @@ function initCosciotto() {
         item.className = 'falling-item';
         const isBomb = Math.random() > 0.8;
         item.innerText = isBomb ? '💣' : '🍗';
-        // Spawn casuale su larghezza corretta
         item.style.left = Math.random() * (gameStage.offsetWidth - 50) + 'px';
         item.style.top = '-50px';
         gameStage.appendChild(item);
@@ -142,11 +140,8 @@ function initCosciotto() {
         let fall = setInterval(() => {
             if (!gameActive) { clearInterval(fall); item.remove(); return; }
             let top = parseFloat(item.style.top);
-            
-            // Altezza dinamica stage
             let stageH = gameStage.offsetHeight; 
 
-            // Collisione
             if (top > stageH - 90 && top < stageH - 10) {
                 const iR = item.getBoundingClientRect();
                 const bR = basket.getBoundingClientRect();
@@ -169,7 +164,7 @@ function initCosciotto() {
     gameIntervals.push(spawner);
 }
 
-// 2. RATTI (Fix Griglia)
+// 2. RATTI
 function initRatti() {
     let html = '<div class="grid-ratti">';
     for(let i=0; i<9; i++) html += `<div class="hole"><div class="mole" onpointerdown="whack(this)">🐭</div></div>`;
@@ -179,7 +174,7 @@ function initRatti() {
     function peep() {
         if (!gameActive) return;
         const moles = document.querySelectorAll('.mole');
-        if(moles.length === 0) return; // Sicurezza
+        if(moles.length === 0) return;
         const mole = moles[Math.floor(Math.random() * moles.length)];
         if (mole.classList.contains('up')) { setTimeout(peep, 100); return; }
         
@@ -199,14 +194,14 @@ window.whack = function(mole) {
     setTimeout(() => mole.classList.remove('up'), 200);
 };
 
-// 3. FRECCETTE (Fix Dimensioni)
+// 3. FRECCETTE
 function initFreccette() {
     gameStage.innerHTML = `<div class="center-mark"></div><div id="dart-target"></div><button onpointerdown="throwDart()" class="btn-action" style="position:absolute; bottom:20px; left:50%; transform:translateX(-50%); width:100px; z-index:200;">TIRA!</button>`;
     const target = document.getElementById('dart-target');
     let angle = 0;
     let loop = setInterval(() => {
         angle += 0.04 + (score * 0.0001);
-        let r = 100; // Raggio oscillazione
+        let r = 100;
         let x = Math.sin(angle) * r;
         let y = Math.cos(angle * 1.3) * r;
         target.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
@@ -225,15 +220,17 @@ window.throwDart = function() {
     updateHUD();
 };
 
-// 4. BARILI (Fix Telecamera e width dinamica)
+// 4. BARILI
 function initBarili() {
     gameStage.innerHTML = `<div id="tower-world"><div id="moving-block"></div></div>`;
     const world = document.getElementById('tower-world');
     const mover = document.getElementById('moving-block');
-    
     let level=0, w=200, pos=0, dir=1, speed=3, h=30;
-    let stageW = gameStage.offsetWidth; // Leggi larghezza reale ora
     
+    // Leggi larghezza REALE
+    let stageW = gameStage.offsetWidth;
+    if(stageW === 0) stageW = 350; // Fallback di sicurezza
+
     mover.style.width=w+'px'; mover.style.bottom='0px';
     
     let loop = setInterval(() => {
@@ -278,14 +275,13 @@ function initBarili() {
         score+=10; level++; w=overlap; speed+=0.5;
         mover.style.width=w+'px'; mover.style.bottom=(level*h)+'px'; pos=0;
         
-        // Scroll Telecamera
         if (level*h > gameStage.offsetHeight/2) {
             world.style.transform = `translateY(${ (level*h) - (gameStage.offsetHeight/2) }px)`;
         }
     };
 }
 
-// 5. SIMON (Fix CSS Grid)
+// 5. SIMON
 let sSeq=[], sStep=0, sClick=false;
 function initSimon() {
     gameStage.innerHTML = `<div class="simon-grid">
