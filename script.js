@@ -21,20 +21,23 @@ const leaderboardList = document.getElementById('leaderboard-list');
 
 // --- REGOLE ---
 const RULES = {
-    'cosciotto': "Trascina il cestino 🧺 col dito.<br>Prendi il cibo, evita le bombe 💣!",
-    'ratti': "Tocca i topi 🐭 appena escono.<br>Sii veloce!",
-    'freccette': "Il bersaglio oscilla.<br>Tira quando il centro è allineato col puntino verde.",
-    'barili': "Impila i barili.<br>Tocca per fermare il blocco al momento giusto.",
+    'cosciotto': "Trascina il cestino 🧺.<br>Prendi il cibo, evita le bombe!",
+    'ratti': "Tocca i topi 🐭 appena escono dai buchi.",
+    'freccette': "Tira quando il centro è allineato col verde.",
+    'barili': "Impila i barili.<br>Tocca per fermare il blocco.",
     'simon': "Memorizza la sequenza di luci e ripetila."
 };
 
 // --- GESTIONE INTERFACCIA ---
+
 function openGame(gameName) {
     currentGame = gameName;
     score = 0; lives = 3;
     
-    // Apri modale e resetta
+    // 1. Apri Modale
     modal.style.display = 'flex';
+    
+    // 2. Reset UI
     gameStage.innerHTML = '';
     saveForm.classList.add('hidden');
     instructionsPanel.classList.remove('hidden');
@@ -49,11 +52,14 @@ function startGameLogic() {
     instructionsPanel.classList.add('hidden');
     gameActive = true;
     
-    if (currentGame === 'cosciotto') initCosciotto();
-    else if (currentGame === 'ratti') initRatti();
-    else if (currentGame === 'freccette') initFreccette();
-    else if (currentGame === 'barili') initBarili();
-    else if (currentGame === 'simon') initSimon();
+    // Piccola pausa per assicurarsi che il DOM sia renderizzato (Fix dimensioni 0)
+    setTimeout(() => {
+        if (currentGame === 'cosciotto') initCosciotto();
+        else if (currentGame === 'ratti') initRatti();
+        else if (currentGame === 'freccette') initFreccette();
+        else if (currentGame === 'barili') initBarili();
+        else if (currentGame === 'simon') initSimon();
+    }, 100);
 }
 
 function closeGame() {
@@ -87,7 +93,10 @@ function gameOver() {
 
 function resetGame() {
     stopAllGames();
-    openGame(currentGame);
+    // Non chiudere il modale, riavvia solo la logica UI
+    gameStage.innerHTML = '';
+    saveForm.classList.add('hidden');
+    instructionsPanel.classList.remove('hidden'); 
 }
 
 function flashStage(color) {
@@ -98,16 +107,21 @@ function flashStage(color) {
 
 // --- GIOCHI ---
 
-// 1. COSCIOTTO
+// 1. COSCIOTTO (Fix Coordinate)
 function initCosciotto() {
     gameStage.innerHTML = `<div id="basket">🧺</div>`;
     const basket = document.getElementById('basket');
     
+    // Posizione iniziale Cestino (Centro)
+    basket.style.left = (gameStage.offsetWidth / 2 - 40) + 'px';
+
     function move(xInput) {
         if (!gameActive) return;
         const rect = gameStage.getBoundingClientRect();
         let x = xInput - rect.left - 40;
-        if (x < 0) x = 0; if (x > rect.width - 80) x = rect.width - 80;
+        // Limiti
+        if (x < 0) x = 0; 
+        if (x > rect.width - 80) x = rect.width - 80;
         basket.style.left = x + 'px';
     }
     
@@ -119,6 +133,7 @@ function initCosciotto() {
         item.className = 'falling-item';
         const isBomb = Math.random() > 0.8;
         item.innerText = isBomb ? '💣' : '🍗';
+        // Spawn casuale su larghezza corretta
         item.style.left = Math.random() * (gameStage.offsetWidth - 50) + 'px';
         item.style.top = '-50px';
         gameStage.appendChild(item);
@@ -128,8 +143,11 @@ function initCosciotto() {
             if (!gameActive) { clearInterval(fall); item.remove(); return; }
             let top = parseFloat(item.style.top);
             
+            // Altezza dinamica stage
+            let stageH = gameStage.offsetHeight; 
+
             // Collisione
-            if (top > gameStage.offsetHeight - 90 && top < gameStage.offsetHeight - 10) {
+            if (top > stageH - 90 && top < stageH - 10) {
                 const iR = item.getBoundingClientRect();
                 const bR = basket.getBoundingClientRect();
                 if (iR.right > bR.left+10 && iR.left < bR.right-10) {
@@ -138,7 +156,7 @@ function initCosciotto() {
                     if (lives <= 0) gameOver(); return;
                 }
             }
-            if (top > gameStage.offsetHeight) {
+            if (top > stageH) {
                 if (!isBomb) { lives--; updateHUD(); }
                 item.remove(); clearInterval(fall);
                 if (lives <= 0) gameOver();
@@ -151,7 +169,7 @@ function initCosciotto() {
     gameIntervals.push(spawner);
 }
 
-// 2. RATTI
+// 2. RATTI (Fix Griglia)
 function initRatti() {
     let html = '<div class="grid-ratti">';
     for(let i=0; i<9; i++) html += `<div class="hole"><div class="mole" onpointerdown="whack(this)">🐭</div></div>`;
@@ -161,6 +179,7 @@ function initRatti() {
     function peep() {
         if (!gameActive) return;
         const moles = document.querySelectorAll('.mole');
+        if(moles.length === 0) return; // Sicurezza
         const mole = moles[Math.floor(Math.random() * moles.length)];
         if (mole.classList.contains('up')) { setTimeout(peep, 100); return; }
         
@@ -180,14 +199,14 @@ window.whack = function(mole) {
     setTimeout(() => mole.classList.remove('up'), 200);
 };
 
-// 3. FRECCETTE
+// 3. FRECCETTE (Fix Dimensioni)
 function initFreccette() {
     gameStage.innerHTML = `<div class="center-mark"></div><div id="dart-target"></div><button onpointerdown="throwDart()" class="btn-action" style="position:absolute; bottom:20px; left:50%; transform:translateX(-50%); width:100px; z-index:200;">TIRA!</button>`;
     const target = document.getElementById('dart-target');
     let angle = 0;
     let loop = setInterval(() => {
         angle += 0.04 + (score * 0.0001);
-        let r = 100;
+        let r = 100; // Raggio oscillazione
         let x = Math.sin(angle) * r;
         let y = Math.cos(angle * 1.3) * r;
         target.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
@@ -206,18 +225,20 @@ window.throwDart = function() {
     updateHUD();
 };
 
-// 4. BARILI
+// 4. BARILI (Fix Telecamera e width dinamica)
 function initBarili() {
     gameStage.innerHTML = `<div id="tower-world"><div id="moving-block"></div></div>`;
     const world = document.getElementById('tower-world');
     const mover = document.getElementById('moving-block');
+    
     let level=0, w=200, pos=0, dir=1, speed=3, h=30;
+    let stageW = gameStage.offsetWidth; // Leggi larghezza reale ora
     
     mover.style.width=w+'px'; mover.style.bottom='0px';
     
     let loop = setInterval(() => {
         pos += speed * dir;
-        if (pos > gameStage.offsetWidth - w || pos < 0) dir *= -1;
+        if (pos > stageW - w || pos < 0) dir *= -1;
         mover.style.left = pos + 'px';
     }, 16);
     gameIntervals.push(loop);
@@ -226,12 +247,14 @@ function initBarili() {
         if(e.target.tagName === 'BUTTON') return;
         if(!gameActive) return;
         
-        let prevLeft = (gameStage.offsetWidth - 200)/2;
+        let prevLeft = (stageW - 200)/2;
         let prevWidth = 200;
         if (level > 0) {
             const pb = document.getElementById(`barile-${level-1}`);
-            prevLeft = parseFloat(pb.style.left);
-            prevWidth = parseFloat(pb.style.width);
+            if(pb) {
+                prevLeft = parseFloat(pb.style.left);
+                prevWidth = parseFloat(pb.style.width);
+            }
         }
         
         let overlap = w;
@@ -255,13 +278,14 @@ function initBarili() {
         score+=10; level++; w=overlap; speed+=0.5;
         mover.style.width=w+'px'; mover.style.bottom=(level*h)+'px'; pos=0;
         
+        // Scroll Telecamera
         if (level*h > gameStage.offsetHeight/2) {
             world.style.transform = `translateY(${ (level*h) - (gameStage.offsetHeight/2) }px)`;
         }
     };
 }
 
-// 5. SIMON
+// 5. SIMON (Fix CSS Grid)
 let sSeq=[], sStep=0, sClick=false;
 function initSimon() {
     gameStage.innerHTML = `<div class="simon-grid">
@@ -269,7 +293,7 @@ function initSimon() {
         <div class="simon-btn" style="background:blue" onpointerdown="clkS(1)"></div>
         <div class="simon-btn" style="background:lime" onpointerdown="clkS(2)"></div>
         <div class="simon-btn" style="background:yellow" onpointerdown="clkS(3)"></div>
-    </div><div id="simon-msg" style="position:absolute; top:50%; width:100%; text-align:center; color:#fff; font-size:20px;"></div>`;
+    </div><div id="simon-msg" style="position:absolute; top:50%; width:100%; text-align:center; color:#fff; font-size:24px; font-weight:bold; pointer-events:none; text-shadow:0 0 10px #000;"></div>`;
     sSeq=[]; setTimeout(playS, 1000);
 }
 function playS() {
@@ -286,6 +310,7 @@ function playS() {
 }
 function flashS(idx) {
     const b=document.querySelectorAll('.simon-btn');
+    if(!b[idx]) return;
     b[idx].classList.add('active-light');
     setTimeout(()=>b[idx].classList.remove('active-light'), 300);
 }
