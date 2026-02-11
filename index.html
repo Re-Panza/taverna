@@ -2,51 +2,57 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>La Taverna di Re Panza</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
     <div class="tavern-container">
         <header>
-            <h1>🍺 La Taverna di Re Panza 🍗</h1>
+            <h1>🍺 Taverna di Re Panza 🍗</h1>
             <p class="subtitle">Solo per veri stomaci forti!</p>
         </header>
 
         <div class="games-grid">
+            
             <div class="game-card" onclick="openGame('cosciotto')">
                 <div class="icon">🍗</div>
                 <h3>Acchiappa il Cosciotto</h3>
                 <button class="btn-play">GIOCA</button>
             </div>
-            <div class="game-card" onclick="openGame('freccette')">
-                <div class="icon">🎯</div>
-                <h3>Freccette dell'Ubriaco</h3>
-                <button class="btn-play">GIOCA</button>
-            </div>
+
             <div class="game-card" onclick="openGame('ratti')">
                 <div class="icon">🐭</div>
                 <h3>Schiaccia il Ratto</h3>
                 <button class="btn-play">GIOCA</button>
             </div>
+
+            <div class="game-card" onclick="openGame('freccette')">
+                <div class="icon">🎯</div>
+                <h3>Freccette Ubriache</h3>
+                <button class="btn-play">GIOCA</button>
+            </div>
+
             <div class="game-card" onclick="openGame('barili')">
                 <div class="icon">🛢️</div>
                 <h3>Torre di Barili</h3>
                 <button class="btn-play">GIOCA</button>
             </div>
+
             <div class="game-card" onclick="openGame('simon')">
                 <div class="icon">🍺</div>
                 <h3>Memoria dell'Oste</h3>
                 <button class="btn-play">GIOCA</button>
             </div>
+
         </div>
     </div>
 
     <div id="gameModal" class="modal-overlay">
         <div class="modal-content">
-            <span class="close-btn" onclick="closeGame()">× ESCI</span>
+            <div class="close-btn" onclick="closeGame()">×</div>
             
             <div class="game-header-modal">
                 <h2 id="modal-title">GIOCO</h2>
@@ -62,15 +68,15 @@
             <div id="game-instructions" class="overlay-panel">
                 <h3>📜 Regole della Taverna</h3>
                 <p id="instruction-text">...</p>
-                <button onclick="startGameLogic()" class="btn-start">INIZIA LA SFIDA!</button>
+                <button onclick="startGameLogic()" class="btn-large">INIZIA!</button>
             </div>
 
             <div id="save-form" class="overlay-panel hidden">
-                <h3>☠️ SEI FUORI GIOCO!</h3>
+                <h3>☠️ SEI FUORI!</h3>
                 <p>Punteggio Finale: <b id="final-score-display">0</b></p>
                 <input type="text" id="player-name" placeholder="Il tuo nome..." maxlength="12">
-                <button onclick="submitScore()" id="btn-submit">INCIDI NELLA BACHECA</button>
-                <button onclick="resetGameUI()" class="btn-retry">RIPROVA</button>
+                <button onclick="submitScore()" id="btn-save">INCIDI NELLA BACHECA</button>
+                <button onclick="resetGame()" class="btn-retry">RIPROVA</button>
             </div>
 
             <div class="leaderboard-section">
