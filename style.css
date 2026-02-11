@@ -193,7 +193,13 @@ input { width: 100%; padding: 10px; margin-bottom: 5px; font-size: 1em; text-ali
     z-index: 50; box-shadow: 0 0 10px #00ff00;
 }
 
-/* BARILI */
+/* BARILI - NOVITÀ: IL MONDO DEI BARILI */
+#tower-world {
+    position: absolute;
+    bottom: 0; left: 0; width: 100%; height: 100%;
+    transition: transform 0.3s ease-out; /* Animazione fluida della telecamera */
+}
+
 .barile {
     position: absolute; height: 30px; background: #d35400;
     border: 2px solid #e67e22; border-radius: 4px; box-sizing: border-box;
