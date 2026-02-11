@@ -1,6 +1,6 @@
 // --- CONFIGURAZIONE ---
-// NUOVO LINK AGGIORNATO:
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwqiyD4_fug2lH9_V28G43HmSG6e6XOMMlke0PJY2mN-5lRsc7lU65xtJUpY_DW3kry/exec";
+// NUOVO LINK AGGIORNATO (Versione con Email Alert e Chat):
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyXgHXa6uSf8qzRUp3awEWjNU8nJTCRLlJ5ukqOtRP1qynShIivmVzmkbs3k1tiyfsLqQ/exec";
 
 // --- VARIABILI GLOBALI ---
 let currentGame = null;
@@ -61,24 +61,42 @@ function loadChat() {
         data.forEach(m => {
             let timeObj = new Date(m.time);
             let timeStr = timeObj.getHours().toString().padStart(2,'0') + ":" + timeObj.getMinutes().toString().padStart(2,'0');
-            
+            let msgId = m.time; // ID per segnalazione
+
             // Colore diverso per Re Panza
             let nameStyle = "color:var(--accent)";
             if(m.name.toLowerCase().includes("re panza")) nameStyle = "color:var(--gold); text-shadow:0 0 5px var(--gold);";
 
             html += `<div class="chat-msg">
+                        <div class="chat-actions">
+                            <button class="btn-report" onclick="reportMsg('${msgId}')" title="Segnala al Re">🚩</button>
+                        </div>
                         <span style="color:#888; font-size:0.8em;">[${timeStr}]</span> 
                         <span class="chat-name" style="${nameStyle}">${m.name}:</span> 
                         <span class="chat-text">${m.msg}</span>
                      </div>`;
         });
-        if(box.innerHTML !== html) { 
+        
+        // Aggiorna solo se necessario
+        if(box.innerHTML.length < 50 || box.childElementCount !== data.length) { 
             box.innerHTML = html; 
             box.scrollTop = box.scrollHeight;
         }
     })
     .catch(e => console.log("Chat offline"));
 }
+
+// Funzione per Segnalare Messaggi
+window.reportMsg = function(timeId) {
+    if(!confirm("Vuoi segnalare questo messaggio ai moderatori?")) return;
+    
+    fetch(`${SCRIPT_URL}?action=chat_report&time=${encodeURIComponent(timeId)}`)
+    .then(r => r.json())
+    .then(d => {
+        if(d.result === "reported") alert("Segnalazione inviata! Le guardie stanno controllando.");
+        else alert("Messaggio già segnalato.");
+    });
+};
 
 // --- GESTIONE GIOCHI ---
 const RULES = {
