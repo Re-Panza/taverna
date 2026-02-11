@@ -1,6 +1,6 @@
 // --- CONFIGURAZIONE ---
-// LINK DATABASE AGGIORNATO:
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxpC_ZFwj8TjuuNR8DJAjsDkauqYXXiUi-cL40XaY0N_DWbl6TqTtf5EWHJai2fnFgniA/exec";
+// Ricorda di inserire qui il link del tuo ultimo deployment
+const SCRIPT_URL = "INSERISCI_QUI_IL_TUO_NUOVO_LINK_DEPLOYMENT";
 
 // --- VARIABILI GLOBALI ---
 let currentGame = null;
@@ -9,15 +9,14 @@ let lives = 3;
 let gameActive = false;
 let gameIntervals = [];
 
-// --- ELEMENTI DOM ---
-const modal = document.getElementById('gameModal');
-const gameStage = document.getElementById('game-stage');
-const scoreDisplay = document.getElementById('global-score');
-const livesDisplay = document.getElementById('global-lives');
-const saveForm = document.getElementById('save-form');
-const instructionsPanel = document.getElementById('game-instructions');
-const instructionsText = document.getElementById('instruction-text');
-const leaderboardList = document.getElementById('leaderboard-list');
+// --- AVVIO IMMEDIATO ---
+window.onload = () => {
+    getDeviceUID(); // Recupera l'identificativo e il nome salvato
+    loadChat();     // Carica i messaggi istantaneamente all'apertura
+};
+
+// Aggiornamento ultra-rapido ogni secondo per una chat fluida
+setInterval(loadChat, 1000); 
 
 // --- SISTEMA ID & CHAT ---
 function getDeviceUID() {
@@ -33,9 +32,6 @@ function getDeviceUID() {
     }
     return uid;
 }
-
-// Polling Chat (ogni 4 secondi)
-setInterval(loadChat, 4000); 
 
 function sendChat() {
     const name = document.getElementById('chat-user-name').value || "Anonimo";
@@ -56,46 +52,44 @@ function loadChat() {
     fetch(`${SCRIPT_URL}?action=chat_get`)
     .then(r=>r.json())
     .then(data => {
-        if(data.length === 0) { box.innerHTML = "<div style='color:#777; padding:5px; text-align:center;'>La locanda è silenziosa...</div>"; return; }
         let html = "";
-        data.forEach(m => {
-            let timeObj = new Date(m.time);
-            let timeStr = timeObj.getHours().toString().padStart(2,'0') + ":" + timeObj.getMinutes().toString().padStart(2,'0');
-            let msgId = m.time;
+        if(data.length === 0) { 
+            html = "<div style='color:#777; padding:5px; text-align:center;'>La locanda è silenziosa...</div>"; 
+        } else {
+            data.forEach(m => {
+                let d = new Date(m.time);
+                let timeStr = d.getHours().toString().padStart(2,'0') + ":" + d.getMinutes().toString().padStart(2,'0');
+                
+                // Colore speciale per il Re
+                let nameStyle = m.name.toLowerCase().includes("re panza") ? "color:var(--gold); font-weight:bold;" : "color:var(--accent);";
 
-            // Colore diverso per Re Panza
-            let nameStyle = "color:var(--accent)";
-            if(m.name.toLowerCase().includes("re panza")) nameStyle = "color:var(--gold); text-shadow:0 0 5px var(--gold);";
-
-            // Struttura Flexbox: Testo a Sinistra, Bandiera a Destra
-            html += `<div class="chat-msg">
-                        <div class="chat-content-wrapper">
-                            <span class="chat-time">[${timeStr}]</span> 
-                            <span class="chat-name" style="${nameStyle}">${m.name}:</span> 
-                            <span class="chat-text">${m.msg}</span>
-                        </div>
-                        <button class="btn-report" onclick="reportMsg('${msgId}')" title="Segnala al Re">🚩</button>
-                     </div>`;
-        });
+                html += `<div class="chat-msg">
+                            <div class="chat-content-wrapper">
+                                <span class="chat-time">[${timeStr}]</span> 
+                                <span class="chat-name" style="${nameStyle}">${m.name}:</span> 
+                                <span class="chat-text">${m.msg}</span>
+                            </div>
+                            <button class="btn-report" onclick="reportMsg('${m.time}')" title="Segnala al Re">🚩</button>
+                         </div>`;
+            });
+        }
         
-        // Aggiorna solo se necessario
-        if(box.innerHTML.length < 50 || box.childElementCount !== data.length) { 
+        // Aggiorna solo se il contenuto è cambiato per evitare sfarfallio
+        if(box.dataset.lastContent !== html) { 
             box.innerHTML = html; 
+            box.dataset.lastContent = html;
             box.scrollTop = box.scrollHeight;
         }
     })
-    .catch(e => console.log("Chat offline"));
+    .catch(e => console.log("Errore connessione chat"));
 }
 
-// Funzione Segnalazione
 window.reportMsg = function(timeId) {
     if(!confirm("Vuoi segnalare questo messaggio ai moderatori?")) return;
-    
     fetch(`${SCRIPT_URL}?action=chat_report&time=${encodeURIComponent(timeId)}`)
     .then(r => r.json())
     .then(d => {
-        if(d.result === "reported") alert("Segnalazione inviata! Le guardie stanno controllando.");
-        else alert("Messaggio già segnalato o gestito.");
+        alert("Segnalazione inviata! Le guardie stanno controllando.");
     });
 };
 
@@ -118,7 +112,6 @@ function openGame(gameName) {
     instructionsText.innerHTML = RULES[gameName] || "Gioca!";
     document.getElementById('modal-title').innerText = gameName.toUpperCase();
     
-    // Titolo classifica
     const lbTitle = document.getElementById('lb-game-name');
     if(lbTitle) lbTitle.innerText = gameName.toUpperCase();
     
@@ -180,15 +173,13 @@ function flashStage(color) {
     setTimeout(() => gameStage.style.borderColor = "rgba(255,255,255,0.1)", 200);
 }
 
-// --- GIOCHI ---
+// --- LOGICA GIOCHI (VERSIONI OTTIMIZZATE) ---
 
-// 1. COSCIOTTO
 function initCosciotto() {
     gameStage.innerHTML = `<div id="basket">🧺</div>`;
     const basket = document.getElementById('basket');
     const stageW = gameStage.offsetWidth;
     basket.style.left = (stageW / 2 - 40) + 'px';
-
     function move(xInput) {
         if (!gameActive) return;
         const rect = gameStage.getBoundingClientRect();
@@ -198,7 +189,6 @@ function initCosciotto() {
     }
     gameStage.ontouchmove = (e) => { e.preventDefault(); move(e.touches[0].clientX); };
     gameStage.onmousemove = (e) => move(e.clientX);
-
     let spawner = setInterval(() => {
         const item = document.createElement('div');
         item.className = 'falling-item';
@@ -207,7 +197,6 @@ function initCosciotto() {
         item.style.left = Math.random() * (gameStage.offsetWidth - 50) + 'px';
         item.style.top = '-50px';
         gameStage.appendChild(item);
-        
         let speed = 4 + (score * 0.05);
         let fall = setInterval(() => {
             if (!gameActive) { clearInterval(fall); item.remove(); return; }
@@ -233,22 +222,17 @@ function initCosciotto() {
     gameIntervals.push(spawner);
 }
 
-// 2. RATTI
 function initRatti() {
     let html = '<div class="grid-ratti">';
-    for(let i=0; i<9; i++) {
-        html += `<div class="hole" onpointerdown="missRat(event)"><div class="mole" onpointerdown="whack(event, this)">🐭</div></div>`;
-    }
+    for(let i=0; i<9; i++) html += `<div class="hole" onpointerdown="missRat(event)"><div class="mole" onpointerdown="whack(event, this)">🐭</div></div>`;
     html += '</div>';
     gameStage.innerHTML = html;
-    
     function peep() {
         if (!gameActive) return;
         const moles = document.querySelectorAll('.mole');
         if(moles.length === 0) return;
         const mole = moles[Math.floor(Math.random() * moles.length)];
         if (mole.classList.contains('up')) { setTimeout(peep, 100); return; }
-        
         mole.innerText = "🐭"; mole.classList.add('up');
         let time = Math.max(500, 1200 - (score * 10));
         setTimeout(() => {
@@ -270,13 +254,10 @@ window.whack = function(e, mole) {
 
 window.missRat = function(e) {
     if (!gameActive) return;
-    lives--; 
-    updateHUD();
-    flashStage('red');
+    lives--; updateHUD(); flashStage('red');
     if (lives <= 0) gameOver();
 }
 
-// 3. FRECCETTE
 function initFreccette() {
     gameStage.innerHTML = `<div class="center-mark"></div><div id="dart-target"></div><button onpointerdown="throwDart()" class="btn-action" style="position:absolute; bottom:20px; left:50%; transform:translateX(-50%); width:100px; z-index:200;">TIRA!</button>`;
     const target = document.getElementById('dart-target');
@@ -291,6 +272,7 @@ function initFreccette() {
     }, 20);
     gameIntervals.push(loop);
 }
+
 window.throwDart = function() {
     if (!gameActive) return;
     const t = document.getElementById('dart-target');
@@ -302,7 +284,6 @@ window.throwDart = function() {
     updateHUD();
 };
 
-// 4. BARILI
 function initBarili() {
     gameStage.innerHTML = `<div id="tower-world"><div id="moving-block"></div></div>`;
     const world = document.getElementById('tower-world');
@@ -310,54 +291,43 @@ function initBarili() {
     let level=0, w=200, pos=0, dir=1, speed=3, h=30;
     let stageW = gameStage.offsetWidth; if(stageW===0) stageW=350; 
     mover.style.width=w+'px'; mover.style.bottom='0px';
-    
     let loop = setInterval(() => {
         pos += speed * dir;
         if (pos > stageW - w || pos < 0) dir *= -1;
         mover.style.left = pos + 'px';
     }, 16);
     gameIntervals.push(loop);
-    
     gameStage.onpointerdown = function(e) {
         if(e.target.tagName === 'BUTTON') return;
         if(!gameActive) return;
-        
         let prevLeft = (stageW - 200)/2;
         let prevWidth = 200;
         if (level > 0) {
             const pb = document.getElementById(`barile-${level-1}`);
             if(pb) { prevLeft = parseFloat(pb.style.left); prevWidth = parseFloat(pb.style.width); }
         }
-        
         let overlap = w;
         let newLeft = pos;
-        
         if (level > 0) {
             const oL = Math.max(pos, prevLeft);
             const oR = Math.min(pos+w, prevLeft+prevWidth);
             overlap = oR - oL;
             newLeft = oL;
         }
-        
         if (overlap <= 0) { lives=0; gameOver(); return; }
-        
         const b = document.createElement('div');
         b.className='barile'; b.id=`barile-${level}`;
         b.style.width=overlap+'px'; b.style.left=newLeft+'px';
         b.style.bottom=(level*h)+'px';
         world.appendChild(b);
-        
         score+=10; level++; w=overlap; speed+=0.5;
         mover.style.width=w+'px'; mover.style.bottom=(level*h)+'px'; pos=0;
-        
         if (level*h > gameStage.offsetHeight/2) {
             world.style.transform = `translateY(${ (level*h) - (gameStage.offsetHeight/2) }px)`;
         }
     };
 }
 
-// 5. SIMON
-let sSeq=[], sStep=0, sClick=false;
 function initSimon() {
     gameStage.innerHTML = `<div class="simon-grid">
         <div class="simon-btn" style="background:red" onpointerdown="clkS(0)"></div>
@@ -367,6 +337,7 @@ function initSimon() {
     </div><div id="simon-msg" style="position:absolute; top:50%; width:100%; text-align:center; color:#fff; font-size:24px; font-weight:bold; pointer-events:none; text-shadow:0 0 10px #000;"></div>`;
     sSeq=[]; setTimeout(playS, 1000);
 }
+
 function playS() {
     if (!gameActive) return;
     sStep=0; sClick=false;
@@ -379,12 +350,14 @@ function playS() {
     }, 800);
     gameIntervals.push(int);
 }
+
 function flashS(idx) {
     const b=document.querySelectorAll('.simon-btn');
     if(!b[idx]) return;
     b[idx].classList.add('active-light');
     setTimeout(()=>b[idx].classList.remove('active-light'), 300);
 }
+
 window.clkS = function(idx) {
     if(!sClick || !gameActive) return;
     flashS(idx);
@@ -397,18 +370,15 @@ window.clkS = function(idx) {
 function submitScore() {
     const name = document.getElementById('player-name').value;
     if(!name) return alert("Inserisci nome");
-    
     localStorage.setItem('tavern_name', name);
     const uid = getDeviceUID();
     const btn = document.getElementById('btn-save');
     btn.innerText = "Salvataggio..."; btn.disabled = true;
-    
     fetch(`${SCRIPT_URL}?action=save&name=${encodeURIComponent(name)}&score=${score}&game=${currentGame}&uid=${uid}`, {method:'POST'})
     .then(()=>{ 
         alert("Record salvato!"); 
         btn.innerText="INCIDI RECORD"; 
         btn.disabled=false; 
-        
         saveForm.classList.add('hidden');
         loadLeaderboard(currentGame);
         instructionsPanel.classList.remove('hidden');
