@@ -1,304 +1,206 @@
-/* --- TEMA GENERALE: TAVERNA MEDIEVALE --- */
-@import url('https://fonts.googleapis.com/css2?family=MedievalSharp&family=Roboto:wght@400;700&display=swap');
+/* --- RESET & MOBILE OPTIMIZATION --- */
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent; /* Toglie flash blu al tocco */
+    touch-action: manipulation;
+}
 
 body {
-    background-color: #1a1008; /* Legno scurissimo */
+    background-color: #1a1008; /* Legno scuro */
     color: #f4e4bc; /* Pergamena */
     font-family: 'MedievalSharp', cursive;
     margin: 0;
     text-align: center;
-    user-select: none; /* Impedisce la selezione del testo mentre giochi */
+    user-select: none; /* No selezione testo */
+    overscroll-behavior: none; /* No rimbalzo pagina su iOS */
     overflow-x: hidden;
 }
 
+/* --- TITOLI & STILE --- */
 h1 {
-    text-shadow: 3px 3px 0px #000;
+    text-shadow: 2px 2px 0 #000;
     color: #ffcc00; /* Oro */
-    margin: 20px 0 5px 0;
-    font-size: 2.5em;
-    letter-spacing: 2px;
+    margin: 15px 0 5px 0;
+    letter-spacing: 1px;
 }
 
 .subtitle {
     color: #d4af37;
     border-bottom: 2px solid #5c4a35;
     display: inline-block;
-    padding-bottom: 10px;
-    margin-bottom: 30px;
+    padding-bottom: 5px;
+    margin-bottom: 20px;
     font-family: 'Roboto', sans-serif;
     font-style: italic;
+    font-size: 0.9em;
 }
 
-/* --- GRIGLIA GIOCHI (MENU) --- */
+/* --- GRIGLIA GIOCHI (HUB) --- */
 .games-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 20px;
-    max-width: 1000px;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 15px;
+    max-width: 800px;
     margin: 0 auto;
-    padding: 20px;
+    padding: 10px;
 }
 
 .game-card {
     background: #3e2723;
-    border: 4px solid #5d4037;
-    border-radius: 12px;
-    padding: 20px;
+    border: 3px solid #5d4037;
+    border-radius: 10px;
+    padding: 15px;
     cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+    transition: transform 0.1s;
     position: relative;
-    overflow: hidden;
 }
 
-.game-card:hover {
-    transform: translateY(-5px) scale(1.02);
-    border-color: #ffcc00;
-    background: #4e342e;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.7);
-}
+.game-card:active { transform: scale(0.95); }
 
-.game-card .icon {
-    font-size: 4em;
-    margin-bottom: 10px;
-    filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.5));
-}
-
-.game-card h3 {
-    margin: 10px 0;
-    color: #ffcc00;
-    font-size: 1.2em;
-}
+.game-card .icon { font-size: 3.5em; margin-bottom: 5px; }
+.game-card h3 { margin: 5px 0; color: #ffcc00; font-size: 1.1em; }
 
 .btn-play {
     background: #8b0000;
     color: #fff;
     border: 2px solid #5c0000;
-    padding: 8px 20px;
-    border-radius: 6px;
+    padding: 6px 15px;
+    border-radius: 5px;
     font-family: 'MedievalSharp', cursive;
-    font-size: 1em;
-    cursor: pointer;
-    margin-top: 10px;
-    box-shadow: 0 4px #4a0000;
+    margin-top: 5px;
+    pointer-events: none; /* Clicca sulla card intera */
 }
 
-.btn-play:active {
-    transform: translateY(4px);
-    box-shadow: 0 0 #000;
-}
-
-/* --- MODALE (SCHERMATA DI GIOCO) --- */
+/* --- MODALE DI GIOCO --- */
 .modal-overlay {
-    display: none; /* Nascosto di default */
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
+    display: none;
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0,0,0,0.95);
     z-index: 1000;
-    justify-content: center;
-    align-items: center;
+    justify-content: center; align-items: center;
 }
 
 .modal-content {
     background: #2b1d14;
-    border: 4px solid #d4af37;
-    width: 95%;
-    max-width: 500px;
-    height: 90vh; /* Occupa quasi tutto lo schermo verticale */
-    border-radius: 15px;
+    border: 3px solid #d4af37;
+    width: 95%; max-width: 500px; height: 95vh;
+    border-radius: 10px;
     position: relative;
-    display: flex;
-    flex-direction: column;
-    padding: 15px;
-    box-shadow: 0 0 50px rgba(0,0,0,1);
+    display: flex; flex-direction: column;
+    padding: 10px;
+    box-shadow: 0 0 30px #000;
 }
 
 .close-btn {
-    position: absolute;
-    top: -15px; right: -15px;
-    background: #c0392b;
-    color: white;
-    width: 40px; height: 40px;
-    line-height: 40px;
-    text-align: center;
-    border-radius: 50%;
-    border: 2px solid white;
-    font-weight: bold;
-    cursor: pointer;
-    z-index: 200;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+    position: absolute; top: -15px; right: -10px;
+    background: #c0392b; color: white;
+    width: 36px; height: 36px;
+    line-height: 34px; text-align: center;
+    border-radius: 50%; border: 2px solid white;
+    font-weight: bold; cursor: pointer; z-index: 200;
+    font-family: sans-serif; font-size: 20px;
 }
 
+/* HUD (Testata) */
 .game-header-modal {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    display: flex; justify-content: space-between; align-items: center;
     border-bottom: 2px solid #5d4037;
-    padding-bottom: 10px;
-    margin-bottom: 10px;
+    padding-bottom: 5px; margin-bottom: 5px;
 }
+.hud { color: #ffcc00; font-size: 1.1em; width: 100%; display: flex; justify-content: space-around; }
 
-.hud {
-    font-family: 'Roboto', sans-serif;
-    font-weight: bold;
-    color: #ffcc00;
-    font-size: 1.2em;
-    width: 100%;
-    display: flex;
-    justify-content: space-around;
-}
-
-/* --- AREA DI GIOCO GENERALE --- */
+/* AREA DI GIOCO (Il Canvas) */
 #game-stage {
     flex-grow: 1;
     background: #111;
-    border: 3px inset #5d4037;
+    border: 2px inset #5d4037;
     position: relative;
-    overflow: hidden; /* IMPORTANTE: Niente esce dai bordi */
-    border-radius: 8px;
-    touch-action: none; /* Evita lo scroll su mobile mentre giochi */
+    overflow: hidden; /* IMPORTANTE */
+    border-radius: 5px;
+    touch-action: none; /* FONDAMENTALE: Blocca lo scroll pagina mentre giochi */
 }
 
-/* --- PANNELLI (ISTRUZIONI & GAMEOVER) --- */
+/* PANNELLI OVERLAY */
 .overlay-panel {
-    background: #f4e4bc; /* Pergamena */
-    color: #2c1e14;
-    position: absolute;
-    top: 50%; left: 50%;
+    background: #f4e4bc; color: #2c1e14;
+    position: absolute; top: 50%; left: 50%;
     transform: translate(-50%, -50%);
-    width: 80%;
-    padding: 20px;
-    border: 5px double #8b4513;
-    text-align: center;
-    z-index: 100;
-    border-radius: 8px;
-    box-shadow: 0 0 30px rgba(0,0,0,0.8);
+    width: 85%; padding: 20px;
+    border: 4px double #8b4513;
+    text-align: center; z-index: 100;
+    border-radius: 8px; box-shadow: 0 0 50px rgba(0,0,0,0.9);
 }
-
-.overlay-panel h3 { margin-top: 0; color: #8b0000; text-transform: uppercase; }
+.overlay-panel h3 { margin-top: 0; color: #8b0000; }
 .hidden { display: none !important; }
 
-.btn-large {
-    width: 100%;
-    padding: 12px;
-    font-size: 1.2em;
-    background: #27ae60;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-family: 'MedievalSharp', cursive;
-    margin-top: 10px;
-    border: 2px solid #1e8449;
+.btn-large, #btn-save, .btn-retry {
+    width: 100%; padding: 12px; font-size: 1.2em;
+    border: none; border-radius: 5px; cursor: pointer;
+    font-family: 'MedievalSharp', cursive; margin-top: 10px;
 }
+.btn-large { background: #27ae60; color: white; border: 2px solid #1e8449; }
+#btn-save { background: #d35400; color: white; }
+.btn-retry { background: #555; color: white; }
+input { width: 100%; padding: 10px; margin-bottom: 5px; font-size: 1em; text-align: center;}
 
-/* --- CLASSIFICA --- */
+/* CLASSIFICA */
 .leaderboard-section {
-    background: #1a1008;
-    margin-top: 10px;
-    padding: 10px;
-    border-radius: 5px;
-    border: 1px solid #5d4037;
-    max-height: 100px;
-    overflow-y: auto;
-    text-align: left;
-    font-family: 'Roboto', monospace;
+    background: #1a1008; margin-top: 5px; padding: 5px;
+    border-radius: 5px; border: 1px solid #5d4037;
+    max-height: 90px; overflow-y: auto; text-align: left;
+    font-family: 'Roboto', monospace; font-size: 0.9em;
 }
-.leaderboard-section li { 
-    border-bottom: 1px solid #333; 
-    padding: 3px 0; 
-    display: flex; justify-content: space-between;
-    font-size: 0.9em;
-}
+.leaderboard-section li { border-bottom: 1px solid #333; padding: 2px 0; display: flex; justify-content: space-between; }
 
-/* =========================================
-   STILI SPECIFICI DEI GIOCHI
-   ========================================= */
 
-/* 1. GIOCO RATTI */
-.grid-ratti {
-    display: flex; flex-wrap: wrap;
-    height: 100%; width: 100%;
-    background-color: #4e342e; /* Terra */
-    padding: 10px; box-sizing: border-box;
-}
+/* --- STILI SPECIFICI DEI GIOCHI --- */
+
+/* RATTI */
+.grid-ratti { display: flex; flex-wrap: wrap; height: 100%; width: 100%; background-color: #4e342e; padding: 10px; }
 .hole {
-    flex: 1 0 30%; /* 3 colonne */
-    height: 30%;
-    margin: 5px;
-    position: relative;
-    background: radial-gradient(ellipse at center, #2e1e12 0%, #3e2723 70%);
-    border-radius: 50%;
-    border-bottom: 5px solid rgba(255,255,255,0.1);
-    overflow: hidden; /* FONDAMENTALE: Nasconde il topo */
+    flex: 1 0 30%; height: 30%; margin: 5px; position: relative;
+    background: radial-gradient(at bottom, #2e1e12, #3e2723);
+    border-radius: 50% 50% 10px 10px;
+    border-bottom: 4px solid rgba(255,255,255,0.1);
+    overflow: hidden; /* Nasconde il topo quando è giù */
 }
 .mole {
-    position: absolute;
-    width: 100%; height: 100%;
-    display: flex; justify-content: center; align-items: flex-end; /* Allinea in basso */
-    font-size: 60px; /* Dimensione Emoji */
-    bottom: -80px; /* Start nascosto sotto */
-    transition: bottom 0.15s ease-out; /* Scatto veloce */
-    cursor: pointer;
-    z-index: 10;
+    position: absolute; width: 100%; height: 100%;
+    display: flex; justify-content: center; align-items: flex-end;
+    font-size: 55px; bottom: -80px; /* Nascosto */
+    transition: bottom 0.1s ease-out; cursor: pointer;
 }
-.mole.up { bottom: 0px; } /* Sale su */
+.mole.up { bottom: 0px; }
 
-/* 2. GIOCO COSCIOTTO */
+/* COSCIOTTO */
 #basket {
-    position: absolute;
-    bottom: 10px;
-    width: 80px; height: 80px;
-    font-size: 70px;
-    line-height: 80px;
-    text-align: center;
-    z-index: 99;
-    /* Nessun background, solo l'emoji */
+    position: absolute; bottom: 5px; width: 80px; height: 80px;
+    font-size: 70px; line-height: 80px; text-align: center; z-index: 99;
 }
-.falling-item {
-    position: absolute;
-    font-size: 40px;
-    z-index: 90;
-    font-weight: bold;
-}
+.falling-item { position: absolute; font-size: 40px; z-index: 90; font-weight: bold; }
 
-/* 3. GIOCO FRECCETTE */
+/* FRECCETTE */
 #dart-target {
     width: 140px; height: 140px;
     background: radial-gradient(circle, #c0392b 15%, #ecf0f1 15%, #ecf0f1 30%, #c0392b 30%, #c0392b 45%, #ecf0f1 45%, #ecf0f1 60%, #2c3e50 60%);
-    border-radius: 50%;
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-    border: 3px solid #fff;
+    border-radius: 50%; position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%); box-shadow: 0 5px 15px rgba(0,0,0,0.5); border: 3px solid #fff;
 }
 .center-mark {
-    position: absolute; top: 50%; left: 50%;
-    width: 8px; height: 8px;
-    background: #00ff00;
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 50;
-    box-shadow: 0 0 10px #00ff00;
+    position: absolute; top: 50%; left: 50%; width: 8px; height: 8px;
+    background: #00ff00; border-radius: 50%; transform: translate(-50%, -50%);
+    z-index: 50; box-shadow: 0 0 10px #00ff00;
 }
 
-/* 4. GIOCO BARILI */
-#barili-container {
-    width: 100%; height: 100%;
-    position: relative;
-    display: flex; flex-direction: column-reverse; /* Stack dal basso */
-    align-items: center;
-}
+/* BARILI */
 .barile {
-    height: 30px;
-    background: #d35400;
-    border: 2px solid #e67e22;
-    border-radius: 4px;
-    box-sizing: border-box;
-    position: absolute;
-    box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+    position: absolute; height: 30px; background: #d35400;
+    border: 2px solid #e67e22; border-radius: 4px; box-sizing: border-box;
 }
-#moving-block {
-    position: absolute;
-    height:
+#moving-block { position: absolute; height: 30px; background: #e67e22; border: 2px solid #fff; border-radius: 4px; z-index: 100; }
+
+/* SIMON */
+.simon-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 20px; height: 100%; }
+.simon-btn { border-radius: 10px; opacity: 0.4; border: 3px solid rgba(0,0,0,0.5); cursor: pointer; }
+.active-light { opacity: 1 !important; box-shadow: 0 0 30px currentColor; transform: scale(0.95); }
