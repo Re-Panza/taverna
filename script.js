@@ -1,6 +1,6 @@
 // --- CONFIGURAZIONE ---
 // LINK DATABASE AGGIORNATO:
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyWSGiTqP4WYZl4zs_2mcw0DlBN0lMcOf3FPiToIiOSm7cCuEffz3sNUD05eJ7qS1-GoQ/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwJCmKFZboR7-h1zzwTidy7uygfjt-2cAOn1p4bArhl/dev";
 
 // --- VARIABILI GLOBALI ---
 let currentGame = null;
