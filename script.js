@@ -1,5 +1,5 @@
 // --- CONFIGURAZIONE ---
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby5lE4L1IZ13C7LaucAwB19dG_7erjtTUrOcCPmltTBcbXANAA8ewakSGwITGS4FOtV-w/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxyVr24vZPL__BcYs8OiZ-40o67hsVvwBYoANQtFDvE438pqpbDU_uQvo40AgG4E0BESA/exec";
 
 // --- VARIABILI GLOBALI ---
 let currentGame = null;
@@ -17,6 +17,20 @@ const saveForm = document.getElementById('save-form');
 const instructionsPanel = document.getElementById('game-instructions');
 const instructionsText = document.getElementById('instruction-text');
 const leaderboardList = document.getElementById('leaderboard-list');
+
+// --- SISTEMA ID UTENTE UNIVOCO ---
+function getDeviceUID() {
+    let uid = localStorage.getItem('tavern_uid');
+    if (!uid) {
+        uid = 'usr_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
+        localStorage.setItem('tavern_uid', uid);
+    }
+    const savedName = localStorage.getItem('tavern_name');
+    if(savedName && document.getElementById('player-name')) {
+        document.getElementById('player-name').value = savedName;
+    }
+    return uid;
+}
 
 // --- REGOLE ---
 const RULES = {
@@ -41,13 +55,13 @@ function openGame(gameName) {
     
     updateHUD();
     loadLeaderboard(gameName);
+    getDeviceUID();
 }
 
 function startGameLogic() {
     instructionsPanel.classList.add('hidden');
     gameActive = true;
     
-    // RITARDO FONDAMENTALE PER APERTURA DOM
     setTimeout(() => {
         if (currentGame === 'cosciotto') initCosciotto();
         else if (currentGame === 'ratti') initRatti();
@@ -98,7 +112,6 @@ function flashStage(color) {
     setTimeout(() => gameStage.style.borderColor = "rgba(255,255,255,0.1)", 200);
 }
 
-
 // --- GIOCHI ---
 
 // 1. COSCIOTTO
@@ -106,7 +119,6 @@ function initCosciotto() {
     gameStage.innerHTML = `<div id="basket">🧺</div>`;
     const basket = document.getElementById('basket');
     
-    // Calcolo dimensioni ritardato
     const stageW = gameStage.offsetWidth;
     basket.style.left = (stageW / 2 - 40) + 'px';
 
@@ -309,23 +321,31 @@ window.clkS = function(idx) {
     if(sStep>=sSeq.length) { score+=sSeq.length*10; updateHUD(); sClick=false; setTimeout(playS, 1000); }
 };
 
-// --- SALVATAGGIO ---
+// --- SALVATAGGIO PUNTEGGIO (CON UID) ---
 function submitScore() {
     const name = document.getElementById('player-name').value;
     if(!name) return alert("Inserisci nome");
-    const btn = document.getElementById('btn-save');
-    btn.innerText = "..."; btn.disabled = true;
     
-    fetch(`${SCRIPT_URL}?action=save&name=${encodeURIComponent(name)}&score=${score}&game=${currentGame}`, {method:'POST'})
-    .then(()=>{ alert("Salvato!"); btn.innerText="INCIDI RECORD"; btn.disabled=false; resetGame(); })
-    .catch(()=>{ alert("Errore"); btn.disabled=false; });
+    localStorage.setItem('tavern_name', name);
+    const uid = getDeviceUID();
+    const btn = document.getElementById('btn-save');
+    btn.innerText = "Salvataggio..."; btn.disabled = true;
+    
+    fetch(`${SCRIPT_URL}?action=save&name=${encodeURIComponent(name)}&score=${score}&game=${currentGame}&uid=${uid}`, {method:'POST'})
+    .then(()=>{ 
+        alert("Record salvato!"); 
+        btn.innerText="INCIDI RECORD"; 
+        btn.disabled=false; 
+        resetGame(); 
+    })
+    .catch(()=>{ alert("Errore di connessione"); btn.disabled=false; });
 }
 
 function loadLeaderboard(g) {
-    leaderboardList.innerHTML = "<li>...</li>";
+    leaderboardList.innerHTML = "<li>Caricamento...</li>";
     fetch(`${SCRIPT_URL}?game=${g}`).then(r=>r.json()).then(d=>{
         leaderboardList.innerHTML="";
-        if(!d.length) leaderboardList.innerHTML="<li>Nessun record</li>";
+        if(!d.length) leaderboardList.innerHTML="<li>Nessun record! Sii il primo!</li>";
         d.forEach((r,i)=> leaderboardList.innerHTML += `<li><span>#${i+1} ${r.name}</span><span>${r.score}</span></li>`);
-    }).catch(()=>leaderboardList.innerHTML="<li>Errore</li>");
+    }).catch(()=>leaderboardList.innerHTML="<li>Errore caricamento</li>");
 }
