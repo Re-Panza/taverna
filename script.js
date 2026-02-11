@@ -1,6 +1,6 @@
 // --- CONFIGURAZIONE ---
 // Ricorda di inserire qui il link del tuo ultimo deployment
-const SCRIPT_URL = "https://script.google.com/macros/library/d/12LPHSlcBYur3s_5WuSuzG8vqzdjPUqbaqURBtliu8xAgbepJCAn1ZN3F/9";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzRM7kZEFD0QHHayNcMrtWq1W2yzAAvIS2fMK9ccrysEe45Tb498_6KhLz5NzaGcRL8JQ/exec";
 
 // --- VARIABILI GLOBALI ---
 let currentGame = null;
