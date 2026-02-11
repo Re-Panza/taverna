@@ -1,44 +1,49 @@
-/* --- CONFIGURAZIONE BASE --- */
+/* --- CONFIGURAZIONE BASE (Colori L&K Tool) --- */
 :root {
-    --bg-dark: #0f172a;
-    --gold: #fbbf24;
+    --bg: #0f172a;
+    --card: #111c33;
+    --muted: #93a4c7;
     --text: #e8eefc;
     --accent: #60a5fa;
-    --border: rgba(255, 255, 255, 0.1);
-    --card-bg: rgba(17, 28, 51, 0.85);
+    --border: rgba(255, 255, 255, .10);
+    --success: #34d399;
+    --danger: #ef4444;
+    --gold: #fbbf24;
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
 body {
     margin: 0;
-    font-family: 'Roboto', sans-serif;
-    background: radial-gradient(circle at 50% 0%, #1e293b, #0f172a);
+    font-family: system-ui, -apple-system, Roboto, sans-serif;
+    background: radial-gradient(1200px 600px at 20% 0%, rgba(96, 165, 250, .25), transparent 60%),
+                radial-gradient(1000px 500px at 90% 10%, rgba(52, 211, 153, .18), transparent 55%),
+                var(--bg);
     color: var(--text);
     padding: 20px;
     overscroll-behavior: none;
     overflow-x: hidden;
-    padding-bottom: 100px; /* Spazio per la mascotte */
+    padding-bottom: 80px;
 }
 
 /* --- LAYOUT SITO --- */
 .nav-header { max-width: 800px; margin: 0 auto 20px; }
-.btn-home { text-decoration: none; color: var(--accent); font-weight: bold; }
+.btn-home { text-decoration: none; color: var(--accent); font-weight: 700; display: inline-flex; align-items: center; gap: 8px;}
 
-.page-title { max-width: 800px; margin: 0 auto 20px; text-align: left; }
+.page-title { max-width: 800px; margin: 0 auto 24px; text-align: left; }
 .page-title h2 { 
     font-family: 'MedievalSharp', cursive; 
-    color: var(--gold); margin: 0; font-size: 2em; 
+    font-size: 32px; color: var(--gold); margin: 0;
     text-shadow: 0 2px 10px rgba(251, 191, 36, 0.3);
 }
-.page-title p { color: #94a3b8; margin: 5px 0 0 0; font-style: italic; }
+.page-title p { color: var(--muted); margin: 5px 0 0 0; font-size: 14px; }
 
 .glass-panel {
-    background: var(--card-bg);
+    background: rgba(17, 28, 51, .80);
     backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-    border: 1px solid var(--border); border-radius: 20px;
-    padding: 20px; max-width: 800px; margin: 0 auto;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+    border: 1px solid var(--border); border-radius: 24px;
+    padding: 24px; max-width: 800px; margin: 0 auto;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.3);
 }
 
 /* --- GRIGLIA GIOCHI --- */
@@ -49,65 +54,101 @@ body {
 
 .game-card {
     background: rgba(255,255,255,0.03);
-    border: 1px solid var(--border); border-radius: 15px;
+    border: 1px solid var(--border); border-radius: 16px;
     padding: 15px; text-align: center; cursor: pointer;
-    transition: 0.2s; position: relative; z-index: 1;
+    transition: 0.2s; position: relative;
 }
 .game-card:active { transform: scale(0.95); background: rgba(255,255,255,0.08); }
-.game-card .icon { font-size: 3em; margin-bottom: 5px; }
+.game-card .icon { font-size: 3em; margin-bottom: 5px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.2)); }
 .game-card h3 { 
-    font-family: 'MedievalSharp', cursive; color: var(--gold); 
+    font-family: 'MedievalSharp', cursive; color: var(--text); 
     margin: 5px 0; font-size: 1.1em; 
 }
 .btn-fake {
-    background: var(--accent); color: #000; padding: 5px; 
-    border-radius: 8px; font-weight: bold; font-size: 0.8em; margin-top: 5px;
+    background: var(--accent); color: #0f172a; padding: 6px; 
+    border-radius: 12px; font-weight: 800; font-size: 0.8em; margin-top: 10px;
 }
 
-/* --- MODALE GIOCO (FIX Z-INDEX) --- */
+/* --- FOOTER & AI (STILE ORIGINALE L&K) --- */
+.paypal-footer { text-align: center; margin-top: 40px; padding: 30px 20px; border-top: 1px solid var(--border); }
+.paypal-link {
+    text-decoration: none; font-weight: 700; font-size: 14px;
+    background: #0070ba; color: #fff; padding: 12px 28px; border-radius: 50px;
+    box-shadow: 0 4px 15px rgba(0, 112, 186, 0.3);
+}
+
+#ai-assistant-container { position: fixed; bottom: 20px; right: 20px; z-index: 9000; }
+#ai-button {
+    width: 65px; height: 65px; border-radius: 50%;
+    background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    border: 2px solid var(--accent);
+    overflow: hidden; /* TAGLIA A CERCHIO */
+}
+#ai-button img { width: 100%; height: 100%; object-fit: cover; }
+
+#ai-window {
+    display: none; position: absolute; bottom: 80px; right: 0;
+    width: 85vw; max-width: 320px; background: var(--card);
+    border: 1px solid var(--accent); border-radius: 20px;
+    padding: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    backdrop-filter: blur(10px);
+}
+.user-msg { color: var(--accent); margin: 5px 0; font-size: 13px; }
+.bot-msg { color: #fff; margin: 5px 0; font-size: 13px; }
+.ai-header { color: var(--accent); font-weight: bold; margin-bottom: 10px; display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); }
+.close-ai { cursor: pointer; font-size: 1.2em; }
+.ai-input-area { display: flex; gap: 5px; border-top: 1px solid var(--border); padding-top: 10px; }
+#ai-input { flex: 1; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: #fff; border-radius: 8px; padding: 8px; font-size: 13px; outline: none; }
+#ai-send-btn { background: var(--accent); border: none; border-radius: 8px; padding: 5px 15px; cursor: pointer; font-weight: bold; }
+
+
+/* --- MODALE GIOCO (Z-INDEX SUPERIORE ALL'AI) --- */
 .modal-overlay {
     display: none;
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.95);
-    z-index: 99999; /* SOPRA ALLA MASCOTTE */
+    background: rgba(15, 23, 42, 0.95);
+    z-index: 99999; /* SOPRA TUTTO */
     justify-content: center; align-items: center;
     backdrop-filter: blur(5px);
 }
 
 .modal-content {
-    background: #1e1e1e;
-    border: 2px solid var(--gold);
+    background: var(--card);
+    border: 1px solid var(--gold);
     width: 95%; max-width: 500px; height: 90vh;
-    border-radius: 15px;
-    position: relative; display: flex; flex-direction: column;
-    padding: 10px; box-shadow: 0 0 50px rgba(251, 191, 36, 0.3);
+    border-radius: 20px;
+    position: relative; 
+    display: flex; flex-direction: column;
+    padding: 15px; box-shadow: 0 0 50px rgba(251, 191, 36, 0.2);
 }
 
 .close-btn {
     position: absolute; top: -15px; right: -10px;
-    background: #ef4444; color: white; width: 35px; height: 35px;
-    border-radius: 50%; text-align: center; line-height: 35px;
-    font-weight: bold; cursor: pointer; border: 2px solid #fff; z-index: 200;
+    background: var(--danger); color: white; width: 40px; height: 40px;
+    border-radius: 50%; text-align: center; line-height: 40px;
+    font-weight: bold; cursor: pointer; border: 3px solid var(--bg); z-index: 200; font-size: 24px;
 }
 
 /* HUD GIOCO */
 .game-header-modal { 
-    display: flex; justify-content: space-between; border-bottom: 1px solid #333; 
-    padding-bottom: 5px; margin-bottom: 5px; flex-shrink: 0;
+    display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); 
+    padding-bottom: 10px; margin-bottom: 10px; flex-shrink: 0;
 }
 #modal-title { margin: 0; color: var(--gold); font-family: 'MedievalSharp', cursive; }
-.hud { font-weight: bold; width: 100%; display: flex; justify-content: space-around; }
-#global-score { color: #34d399; }
+.hud { width: 100%; display: flex; justify-content: space-around; color: var(--text); }
+#global-score { color: var(--success); }
 
 /* --- AREA DI GIOCO (FIX DIMENSIONI) --- */
 #game-stage {
-    flex-grow: 1; /* Occupa tutto lo spazio disponibile */
+    flex-grow: 1; 
     width: 100%;
-    position: relative;
     background: #000;
-    border: 1px solid #444;
-    border-radius: 10px;
-    overflow: hidden; /* FONDAMENTALE */
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    position: relative; 
+    overflow: hidden; 
     touch-action: none;
     user-select: none;
 }
@@ -133,7 +174,6 @@ body {
 #basket {
     position: absolute; bottom: 10px; width: 80px; height: 80px;
     font-size: 70px; line-height: 80px; text-align: center; z-index: 99;
-    /* Left sarà settato da JS */
 }
 .falling-item { position: absolute; font-size: 40px; z-index: 90; font-weight: bold; }
 
@@ -162,66 +202,23 @@ body {
 /* --- PANNELLI OVERLAY --- */
 .overlay-panel {
     position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    background: rgba(15, 23, 42, 0.95); width: 85%; padding: 20px;
-    border: 1px solid var(--gold); border-radius: 15px;
-    text-align: center; z-index: 200; backdrop-filter: blur(5px);
+    background: rgba(17, 28, 51, 0.95); width: 85%; padding: 24px;
+    border: 1px solid var(--gold); border-radius: 16px;
+    text-align: center; z-index: 200; backdrop-filter: blur(10px);
 }
+.overlay-panel h3 { margin-top: 0; color: var(--gold); font-family: 'MedievalSharp', cursive; font-size: 24px;}
 .hidden { display: none !important; }
-.btn-action { width: 100%; padding: 12px; background: var(--gold); border: none; font-weight: bold; cursor: pointer; border-radius: 8px; margin-top: 10px; }
-.btn-retry { width: 100%; padding: 12px; background: #333; color: #fff; border: 1px solid #555; margin-top: 5px; border-radius: 8px; cursor: pointer;}
-input[type="text"] { width: 100%; padding: 10px; margin-bottom: 5px; border-radius: 5px; border: none; text-align: center; }
 
-/* --- AI MASCOTTE (RE PANZA) FIX --- */
-#ai-assistant-container { 
-    position: fixed; 
-    bottom: 0; 
-    right: 0; 
-    z-index: 8000;
-    pointer-events: none; /* Lascia cliccare sotto se è vuoto */
+.btn-action { width: 100%; padding: 14px; background: var(--gold); border: none; font-weight: 800; cursor: pointer; border-radius: 12px; margin-top: 10px; color: #0f172a; text-transform: uppercase; }
+.btn-retry { width: 100%; padding: 14px; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid var(--border); margin-top: 5px; border-radius: 12px; cursor: pointer;}
+input[type="text"] { width: 100%; padding: 12px; margin-bottom: 5px; border-radius: 12px; border: 1px solid var(--border); background: rgba(0,0,0,0.3); color: #fff; text-align: center; }
+
+/* CLASSIFICA */
+.leaderboard-section {
+    background: rgba(0,0,0,0.2); margin-top: 10px; padding: 10px;
+    border-radius: 12px; border: 1px solid var(--border);
+    max-height: 100px; overflow-y: auto; text-align: left;
+    font-family: monospace; font-size: 13px;
 }
-
-#ai-button {
-    width: auto;
-    height: auto;
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    border-radius: 0;
-    overflow: visible;
-    cursor: pointer;
-    pointer-events: auto; /* Riattiva click sulla mascotte */
-    padding-right: 10px;
-}
-
-#ai-button img {
-    height: 200px; /* Altezza fissa per non coprire tutto */
-    width: auto;
-    filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.5));
-    transition: transform 0.2s;
-    display: block;
-}
-
-#ai-button:hover img {
-    transform: scale(1.05) rotate(-2deg);
-}
-
-/* Finestra Chat */
-#ai-window { 
-    display: none; 
-    position: absolute; 
-    bottom: 180px; /* Sopra la testa della mascotte */
-    right: 20px; 
-    width: 300px; 
-    background: var(--card-bg); 
-    border: 1px solid var(--accent); 
-    padding: 10px; 
-    border-radius: 15px; 
-    pointer-events: auto;
-}
-.user-msg { color: var(--accent); margin: 5px 0; font-size: 14px; }
-.bot-msg { color: #fff; margin: 5px 0; font-size: 14px; }
-.err-msg { color: #ef4444; font-size: 12px; }
-
-/* Footer */
-.paypal-footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border); }
-.paypal-link { background: #0070ba; color: white; padding: 10px 20px; border-radius: 20px; text-decoration: none; font-weight: bold; }
+.leaderboard-section li { border-bottom: 1px solid var(--border); padding: 4px 0; display: flex; justify-content: space-between; color: var(--muted); }
+.leaderboard-section li:first-child { color: var(--gold); font-weight: bold; }
