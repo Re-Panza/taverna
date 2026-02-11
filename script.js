@@ -1,5 +1,6 @@
 // --- CONFIGURAZIONE ---
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxyVr24vZPL__BcYs8OiZ-40o67hsVvwBYoANQtFDvE438pqpbDU_uQvo40AgG4E0BESA/exec";
+// NUOVO LINK AGGIORNATO:
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyNmZvN8qG0RyRAiYdKuQQ7C8t6urPSBQ4QZx7q9bUOk17SrkZOdHPFQpsmOpYb9PLAdQ/exec";
 
 // --- VARIABILI GLOBALI ---
 let currentGame = null;
@@ -18,50 +19,95 @@ const instructionsPanel = document.getElementById('game-instructions');
 const instructionsText = document.getElementById('instruction-text');
 const leaderboardList = document.getElementById('leaderboard-list');
 
-// --- SISTEMA ID UTENTE UNIVOCO ---
+// --- SISTEMA ID & CHAT ---
 function getDeviceUID() {
     let uid = localStorage.getItem('tavern_uid');
     if (!uid) {
-        uid = 'usr_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
+        uid = 'usr_' + Math.random().toString(36).substr(2, 9);
         localStorage.setItem('tavern_uid', uid);
     }
     const savedName = localStorage.getItem('tavern_name');
-    if(savedName && document.getElementById('player-name')) {
-        document.getElementById('player-name').value = savedName;
+    if(savedName) {
+        if(document.getElementById('player-name')) document.getElementById('player-name').value = savedName;
+        if(document.getElementById('chat-user-name')) document.getElementById('chat-user-name').value = savedName;
     }
     return uid;
 }
 
-// --- REGOLE ---
+// Polling Chat (ogni 4 secondi)
+setInterval(loadChat, 4000); 
+
+function sendChat() {
+    const name = document.getElementById('chat-user-name').value || "Anonimo";
+    const msg = document.getElementById('chat-message').value;
+    if(!msg) return;
+    
+    document.getElementById('chat-message').value = ""; 
+    localStorage.setItem('tavern_name', name); 
+    
+    fetch(`${SCRIPT_URL}?action=chat_send&name=${encodeURIComponent(name)}&msg=${encodeURIComponent(msg)}&uid=${getDeviceUID()}`, {method:'POST'})
+    .then(()=> loadChat());
+}
+
+function loadChat() {
+    const box = document.getElementById('tavern-chat-box');
+    if(!box) return; // Se non c'è la chat nell'HTML, esci
+    
+    fetch(`${SCRIPT_URL}?action=chat_get`)
+    .then(r=>r.json())
+    .then(data => {
+        if(data.length === 0) { box.innerHTML = "<div style='color:#777; padding:5px;'>Nessun messaggio.</div>"; return; }
+        let html = "";
+        data.forEach(m => {
+            // Formatta l'ora (es. 14:30)
+            let timeObj = new Date(m.time);
+            let timeStr = timeObj.getHours().toString().padStart(2,'0') + ":" + timeObj.getMinutes().toString().padStart(2,'0');
+            
+            html += `<div class="chat-msg">
+                        <span style="color:#888; font-size:0.8em;">[${timeStr}]</span> 
+                        <span class="chat-name">${m.name}:</span> 
+                        <span class="chat-text">${m.msg}</span>
+                     </div>`;
+        });
+        if(box.innerHTML !== html) { 
+            box.innerHTML = html; 
+            box.scrollTop = box.scrollHeight;
+        }
+    })
+    .catch(e => console.log("Chat offline"));
+}
+
+// --- GESTIONE GIOCHI ---
 const RULES = {
-    'cosciotto': "Trascina il cestino 🧺 col dito.<br>Prendi il cibo, evita le bombe 💣!",
-    'ratti': "Tocca i topi 🐭 appena escono dai buchi.<br>Sii veloce!",
-    'freccette': "Tira quando il centro è allineato col verde.",
-    'barili': "Impila i barili.<br>Tocca per fermare il blocco.",
+    'cosciotto': "Trascina il cestino 🧺 col dito.<br>Prendi cibo 🍗, evita le bombe 💣!",
+    'ratti': "Tocca i topi 🐭 appena escono.<br>⚠️ Se tocchi il buco vuoto perdi una vita!",
+    'freccette': "Tira quando il centro rosso è allineato col puntino verde.",
+    'barili': "Impila i barili.<br>Tocca per fermare il blocco al momento giusto.",
     'simon': "Memorizza la sequenza di luci e ripetila."
 };
 
-// --- GESTIONE INTERFACCIA ---
 function openGame(gameName) {
     currentGame = gameName;
     score = 0; lives = 3;
-    
     modal.style.display = 'flex';
     gameStage.innerHTML = '';
     saveForm.classList.add('hidden');
     instructionsPanel.classList.remove('hidden');
-    instructionsText.innerHTML = RULES[gameName] || "Gioca e divertiti!";
+    instructionsText.innerHTML = RULES[gameName] || "Gioca!";
     document.getElementById('modal-title').innerText = gameName.toUpperCase();
+    
+    // Aggiorna titolo classifica se presente
+    const lbTitle = document.getElementById('lb-game-name');
+    if(lbTitle) lbTitle.innerText = gameName.toUpperCase();
     
     updateHUD();
     loadLeaderboard(gameName);
-    getDeviceUID();
+    getDeviceUID(); // Init ID
 }
 
 function startGameLogic() {
     instructionsPanel.classList.add('hidden');
     gameActive = true;
-    
     setTimeout(() => {
         if (currentGame === 'cosciotto') initCosciotto();
         else if (currentGame === 'ratti') initRatti();
@@ -112,13 +158,12 @@ function flashStage(color) {
     setTimeout(() => gameStage.style.borderColor = "rgba(255,255,255,0.1)", 200);
 }
 
-// --- GIOCHI ---
+// --- LOGICA SPECIFICA GIOCHI ---
 
 // 1. COSCIOTTO
 function initCosciotto() {
     gameStage.innerHTML = `<div id="basket">🧺</div>`;
     const basket = document.getElementById('basket');
-    
     const stageW = gameStage.offsetWidth;
     basket.style.left = (stageW / 2 - 40) + 'px';
 
@@ -159,19 +204,20 @@ function initCosciotto() {
                 if (!isBomb) { lives--; updateHUD(); }
                 item.remove(); clearInterval(fall);
                 if (lives <= 0) gameOver();
-            } else {
-                item.style.top = (top + speed) + 'px';
-            }
+            } else { item.style.top = (top + speed) + 'px'; }
         }, 20);
         gameIntervals.push(fall);
     }, 1000);
     gameIntervals.push(spawner);
 }
 
-// 2. RATTI
+// 2. RATTI (FIXED: PERDITA VITA SUL BUCO)
 function initRatti() {
     let html = '<div class="grid-ratti">';
-    for(let i=0; i<9; i++) html += `<div class="hole"><div class="mole" onpointerdown="whack(this)">🐭</div></div>`;
+    for(let i=0; i<9; i++) {
+        // onpointerdown sul buco per l'errore, sul topo per il punto
+        html += `<div class="hole" onpointerdown="missRat(event)"><div class="mole" onpointerdown="whack(event, this)">🐭</div></div>`;
+    }
     html += '</div>';
     gameStage.innerHTML = html;
     
@@ -191,12 +237,23 @@ function initRatti() {
     }
     setTimeout(peep, 500);
 }
-window.whack = function(mole) {
+
+window.whack = function(e, mole) {
+    e.stopPropagation(); // Ferma la propagazione al buco!
     if (!mole.classList.contains('up') || !gameActive) return;
     score += 10; updateHUD();
     mole.innerText = "💥";
-    setTimeout(() => mole.classList.remove('up'), 200);
+    mole.classList.remove('up');
+    setTimeout(() => mole.innerText = "🐭", 200);
 };
+
+window.missRat = function(e) {
+    if (!gameActive) return;
+    lives--; 
+    updateHUD();
+    flashStage('red');
+    if (lives <= 0) gameOver();
+}
 
 // 3. FRECCETTE
 function initFreccette() {
@@ -230,10 +287,7 @@ function initBarili() {
     const world = document.getElementById('tower-world');
     const mover = document.getElementById('moving-block');
     let level=0, w=200, pos=0, dir=1, speed=3, h=30;
-    
-    let stageW = gameStage.offsetWidth;
-    if(stageW === 0) stageW = 350; 
-
+    let stageW = gameStage.offsetWidth; if(stageW===0) stageW=350; 
     mover.style.width=w+'px'; mover.style.bottom='0px';
     
     let loop = setInterval(() => {
@@ -251,10 +305,7 @@ function initBarili() {
         let prevWidth = 200;
         if (level > 0) {
             const pb = document.getElementById(`barile-${level-1}`);
-            if(pb) {
-                prevLeft = parseFloat(pb.style.left);
-                prevWidth = parseFloat(pb.style.width);
-            }
+            if(pb) { prevLeft = parseFloat(pb.style.left); prevWidth = parseFloat(pb.style.width); }
         }
         
         let overlap = w;
@@ -321,7 +372,7 @@ window.clkS = function(idx) {
     if(sStep>=sSeq.length) { score+=sSeq.length*10; updateHUD(); sClick=false; setTimeout(playS, 1000); }
 };
 
-// --- SALVATAGGIO PUNTEGGIO (CON UID) ---
+// --- SALVATAGGIO ---
 function submitScore() {
     const name = document.getElementById('player-name').value;
     if(!name) return alert("Inserisci nome");
@@ -336,7 +387,11 @@ function submitScore() {
         alert("Record salvato!"); 
         btn.innerText="INCIDI RECORD"; 
         btn.disabled=false; 
-        resetGame(); 
+        
+        // Aggiorna istantaneamente
+        saveForm.classList.add('hidden');
+        loadLeaderboard(currentGame);
+        instructionsPanel.classList.remove('hidden');
     })
     .catch(()=>{ alert("Errore di connessione"); btn.disabled=false; });
 }
