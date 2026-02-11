@@ -26,37 +26,33 @@
 
     <div class="container glass-panel">
         <div class="games-grid">
-            
             <div class="game-card" onclick="openGame('cosciotto')">
-                <div class="icon">🍗</div>
-                <h3>Acchiappa il Cosciotto</h3>
-                <div class="btn-fake">GIOCA</div>
+                <div class="icon">🍗</div><h3>Acchiappa il Cosciotto</h3><div class="btn-fake">GIOCA</div>
             </div>
-
             <div class="game-card" onclick="openGame('ratti')">
-                <div class="icon">🐭</div>
-                <h3>Schiaccia il Ratto</h3>
-                <div class="btn-fake">GIOCA</div>
+                <div class="icon">🐭</div><h3>Schiaccia il Ratto</h3><div class="btn-fake">GIOCA</div>
             </div>
-
             <div class="game-card" onclick="openGame('freccette')">
-                <div class="icon">🎯</div>
-                <h3>Freccette Ubriache</h3>
-                <div class="btn-fake">GIOCA</div>
+                <div class="icon">🎯</div><h3>Freccette Ubriache</h3><div class="btn-fake">GIOCA</div>
             </div>
-
             <div class="game-card" onclick="openGame('barili')">
-                <div class="icon">🛢️</div>
-                <h3>Torre di Barili</h3>
-                <div class="btn-fake">GIOCA</div>
+                <div class="icon">🛢️</div><h3>Torre di Barili</h3><div class="btn-fake">GIOCA</div>
             </div>
-
             <div class="game-card" onclick="openGame('simon')">
-                <div class="icon">🍺</div>
-                <h3>Memoria dell'Oste</h3>
-                <div class="btn-fake">GIOCA</div>
+                <div class="icon">🍺</div><h3>Memoria dell'Oste</h3><div class="btn-fake">GIOCA</div>
             </div>
+        </div>
+    </div>
 
+    <div class="container glass-panel" style="margin-top: 20px;">
+        <div class="chat-header">💬 La Locanda (Chat Pubblica)</div>
+        <div id="tavern-chat-box">
+            <div class="loading-msg">Caricamento messaggi...</div>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" id="chat-user-name" placeholder="Tuo Nome" maxlength="10">
+            <input type="text" id="chat-message" placeholder="Scrivi un messaggio..." maxlength="50">
+            <button onclick="sendChat()" class="btn-chat-send">➤</button>
         </div>
     </div>
 
@@ -71,9 +67,7 @@
                 <span>👑 Re Panza AI</span>
                 <span onclick="toggleAI()" class="close-ai">×</span>
             </div>
-            <div id="ai-content">
-                 <p>Benvenuto nella mia Taverna! Se hai bevuto troppo, chiedi pure aiuto a me.</p>
-            </div>
+            <div id="ai-content"><p>Benvenuto! Se hai bevuto troppo, chiedi pure aiuto a me.</p></div>
             <div class="ai-input-area">
                 <input type="text" id="ai-input" placeholder="Chiedi al Re...">
                 <button id="ai-send-btn" onclick="chiediAlRe()">Invia</button>
@@ -113,10 +107,8 @@
             </div>
 
             <div class="leaderboard-section">
-                <h4>🏆 Top 5 Avventurieri</h4>
-                <ul id="leaderboard-list">
-                    <li>Caricamento...</li>
-                </ul>
+                <h4>🏆 Top 5 - <span id="lb-game-name">Generale</span></h4>
+                <ul id="leaderboard-list"><li>Caricamento...</li></ul>
             </div>
         </div>
     </div>
