@@ -18,6 +18,7 @@ body {
     padding: 20px;
     overscroll-behavior: none;
     overflow-x: hidden;
+    padding-bottom: 100px; /* Spazio per la mascotte */
 }
 
 /* --- LAYOUT SITO --- */
@@ -50,8 +51,7 @@ body {
     background: rgba(255,255,255,0.03);
     border: 1px solid var(--border); border-radius: 15px;
     padding: 15px; text-align: center; cursor: pointer;
-    transition: 0.2s;
-    position: relative; /* Importante per z-index locali */
+    transition: 0.2s; position: relative; z-index: 1;
 }
 .game-card:active { transform: scale(0.95); background: rgba(255,255,255,0.08); }
 .game-card .icon { font-size: 3em; margin-bottom: 5px; }
@@ -64,12 +64,12 @@ body {
     border-radius: 8px; font-weight: bold; font-size: 0.8em; margin-top: 5px;
 }
 
-/* --- MODALE GIOCO (FIXED) --- */
+/* --- MODALE GIOCO (FIX Z-INDEX) --- */
 .modal-overlay {
     display: none;
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0,0,0,0.95);
-    z-index: 99999; /* Z-Index altissimo */
+    z-index: 99999; /* SOPRA ALLA MASCOTTE */
     justify-content: center; align-items: center;
     backdrop-filter: blur(5px);
 }
@@ -77,10 +77,9 @@ body {
 .modal-content {
     background: #1e1e1e;
     border: 2px solid var(--gold);
-    width: 95%; max-width: 500px; height: 90vh; /* Altezza fissa viewport */
+    width: 95%; max-width: 500px; height: 90vh;
     border-radius: 15px;
-    position: relative; 
-    display: flex; flex-direction: column; /* Flex column fondamentale */
+    position: relative; display: flex; flex-direction: column;
     padding: 10px; box-shadow: 0 0 50px rgba(251, 191, 36, 0.3);
 }
 
@@ -94,22 +93,21 @@ body {
 /* HUD GIOCO */
 .game-header-modal { 
     display: flex; justify-content: space-between; border-bottom: 1px solid #333; 
-    padding-bottom: 5px; margin-bottom: 5px; flex-shrink: 0; /* Non si rimpicciolisce */
+    padding-bottom: 5px; margin-bottom: 5px; flex-shrink: 0;
 }
 #modal-title { margin: 0; color: var(--gold); font-family: 'MedievalSharp', cursive; }
 .hud { font-weight: bold; width: 100%; display: flex; justify-content: space-around; }
 #global-score { color: #34d399; }
 
-/* --- AREA DI GIOCO (IL FIX VERO) --- */
+/* --- AREA DI GIOCO (FIX DIMENSIONI) --- */
 #game-stage {
-    flex-grow: 1; /* Occupa tutto lo spazio rimanente */
+    flex-grow: 1; /* Occupa tutto lo spazio disponibile */
     width: 100%;
-    min-height: 0; /* Fix per Firefox/Flexbox overflow */
+    position: relative;
     background: #000;
     border: 1px solid #444;
     border-radius: 10px;
-    position: relative; /* Fondamentale per position:absolute dei figli */
-    overflow: hidden; 
+    overflow: hidden; /* FONDAMENTALE */
     touch-action: none;
     user-select: none;
 }
@@ -117,10 +115,7 @@ body {
 /* --- ELEMENTI GIOCHI --- */
 
 /* 1. RATTI */
-.grid-ratti { 
-    display: flex; flex-wrap: wrap; height: 100%; width: 100%; /* Forza piene dimensioni */
-    background: #3e2723; padding: 10px; 
-}
+.grid-ratti { display: flex; flex-wrap: wrap; height: 100%; width: 100%; background: #3e2723; padding: 10px; }
 .hole {
     flex: 1 0 30%; height: 30%; margin: 5px; position: relative;
     background: radial-gradient(at bottom, #1a1a1a, #3e2723);
@@ -138,7 +133,7 @@ body {
 #basket {
     position: absolute; bottom: 10px; width: 80px; height: 80px;
     font-size: 70px; line-height: 80px; text-align: center; z-index: 99;
-    /* Rimosso left default, gestito da JS */
+    /* Left sarà settato da JS */
 }
 .falling-item { position: absolute; font-size: 40px; z-index: 90; font-weight: bold; }
 
@@ -146,8 +141,7 @@ body {
 #dart-target {
     width: 140px; height: 140px; background: radial-gradient(circle, #e74c3c 20%, #ecf0f1 20%, #ecf0f1 40%, #e74c3c 40%, #e74c3c 60%, #2c3e50 60%);
     border-radius: 50%; position: absolute; top: 50%; left: 50%;
-    transform: translate(-50%, -50%); border: 3px solid #fff;
-    z-index: 1;
+    transform: translate(-50%, -50%); border: 3px solid #fff; z-index: 1;
 }
 .center-mark {
     position: absolute; top: 50%; left: 50%; width: 10px; height: 10px;
@@ -161,10 +155,7 @@ body {
 #moving-block { position: absolute; height: 30px; background: #e67e22; border: 2px solid #fff; border-radius: 4px; z-index: 100; bottom: 0; }
 
 /* 5. SIMON */
-.simon-grid { 
-    display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 20px; 
-    height: 100%; width: 100%; /* Espansione forzata */
-}
+.simon-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 20px; height: 100%; width: 100%; }
 .simon-btn { border-radius: 10px; opacity: 0.3; border: 2px solid #fff; width: 100%; height: 100%; }
 .active-light { opacity: 1 !important; box-shadow: 0 0 30px currentColor; transform: scale(0.95); }
 
@@ -180,8 +171,57 @@ body {
 .btn-retry { width: 100%; padding: 12px; background: #333; color: #fff; border: 1px solid #555; margin-top: 5px; border-radius: 8px; cursor: pointer;}
 input[type="text"] { width: 100%; padding: 10px; margin-bottom: 5px; border-radius: 5px; border: none; text-align: center; }
 
-/* AI e FOOTER */
-#ai-assistant-container { position: fixed; bottom: 20px; right: 20px; z-index: 8000; }
-#ai-window { display: none; position: absolute; bottom: 75px; right: 0; width: 300px; background: var(--card-bg); border: 1px solid var(--accent); padding: 10px; border-radius: 15px; }
+/* --- AI MASCOTTE (RE PANZA) FIX --- */
+#ai-assistant-container { 
+    position: fixed; 
+    bottom: 0; 
+    right: 0; 
+    z-index: 8000;
+    pointer-events: none; /* Lascia cliccare sotto se è vuoto */
+}
+
+#ai-button {
+    width: auto;
+    height: auto;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
+    overflow: visible;
+    cursor: pointer;
+    pointer-events: auto; /* Riattiva click sulla mascotte */
+    padding-right: 10px;
+}
+
+#ai-button img {
+    height: 200px; /* Altezza fissa per non coprire tutto */
+    width: auto;
+    filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.5));
+    transition: transform 0.2s;
+    display: block;
+}
+
+#ai-button:hover img {
+    transform: scale(1.05) rotate(-2deg);
+}
+
+/* Finestra Chat */
+#ai-window { 
+    display: none; 
+    position: absolute; 
+    bottom: 180px; /* Sopra la testa della mascotte */
+    right: 20px; 
+    width: 300px; 
+    background: var(--card-bg); 
+    border: 1px solid var(--accent); 
+    padding: 10px; 
+    border-radius: 15px; 
+    pointer-events: auto;
+}
+.user-msg { color: var(--accent); margin: 5px 0; font-size: 14px; }
+.bot-msg { color: #fff; margin: 5px 0; font-size: 14px; }
+.err-msg { color: #ef4444; font-size: 12px; }
+
+/* Footer */
 .paypal-footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border); }
 .paypal-link { background: #0070ba; color: white; padding: 10px 20px; border-radius: 20px; text-decoration: none; font-weight: bold; }
