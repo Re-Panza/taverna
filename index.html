@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>La Taverna di Re Panza</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap" rel="stylesheet">
 </head>
 <body>
 
@@ -65,10 +66,10 @@
             </div>
 
             <div id="save-form" class="overlay-panel hidden">
-                <h3>☠️ PARTITA FINITA!</h3>
+                <h3>☠️ SEI FUORI GIOCO!</h3>
                 <p>Punteggio Finale: <b id="final-score-display">0</b></p>
                 <input type="text" id="player-name" placeholder="Il tuo nome..." maxlength="12">
-                <button onclick="submitScore()">INCIDI NELLA BACHECA</button>
+                <button onclick="submitScore()" id="btn-submit">INCIDI NELLA BACHECA</button>
                 <button onclick="resetGameUI()" class="btn-retry">RIPROVA</button>
             </div>
 
