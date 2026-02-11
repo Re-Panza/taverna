@@ -1,6 +1,6 @@
 // --- CONFIGURAZIONE ---
 // NUOVO LINK AGGIORNATO:
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyNmZvN8qG0RyRAiYdKuQQ7C8t6urPSBQ4QZx7q9bUOk17SrkZOdHPFQpsmOpYb9PLAdQ/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwqiyD4_fug2lH9_V28G43HmSG6e6XOMMlke0PJY2mN-5lRsc7lU65xtJUpY_DW3kry/exec";
 
 // --- VARIABILI GLOBALI ---
 let currentGame = null;
@@ -51,7 +51,7 @@ function sendChat() {
 
 function loadChat() {
     const box = document.getElementById('tavern-chat-box');
-    if(!box) return; // Se non c'è la chat nell'HTML, esci
+    if(!box) return; 
     
     fetch(`${SCRIPT_URL}?action=chat_get`)
     .then(r=>r.json())
@@ -59,13 +59,16 @@ function loadChat() {
         if(data.length === 0) { box.innerHTML = "<div style='color:#777; padding:5px;'>Nessun messaggio.</div>"; return; }
         let html = "";
         data.forEach(m => {
-            // Formatta l'ora (es. 14:30)
             let timeObj = new Date(m.time);
             let timeStr = timeObj.getHours().toString().padStart(2,'0') + ":" + timeObj.getMinutes().toString().padStart(2,'0');
             
+            // Colore diverso per Re Panza
+            let nameStyle = "color:var(--accent)";
+            if(m.name.toLowerCase().includes("re panza")) nameStyle = "color:var(--gold); text-shadow:0 0 5px var(--gold);";
+
             html += `<div class="chat-msg">
                         <span style="color:#888; font-size:0.8em;">[${timeStr}]</span> 
-                        <span class="chat-name">${m.name}:</span> 
+                        <span class="chat-name" style="${nameStyle}">${m.name}:</span> 
                         <span class="chat-text">${m.msg}</span>
                      </div>`;
         });
@@ -96,13 +99,13 @@ function openGame(gameName) {
     instructionsText.innerHTML = RULES[gameName] || "Gioca!";
     document.getElementById('modal-title').innerText = gameName.toUpperCase();
     
-    // Aggiorna titolo classifica se presente
+    // Titolo classifica
     const lbTitle = document.getElementById('lb-game-name');
     if(lbTitle) lbTitle.innerText = gameName.toUpperCase();
     
     updateHUD();
     loadLeaderboard(gameName);
-    getDeviceUID(); // Init ID
+    getDeviceUID(); 
 }
 
 function startGameLogic() {
@@ -158,7 +161,7 @@ function flashStage(color) {
     setTimeout(() => gameStage.style.borderColor = "rgba(255,255,255,0.1)", 200);
 }
 
-// --- LOGICA SPECIFICA GIOCHI ---
+// --- GIOCHI ---
 
 // 1. COSCIOTTO
 function initCosciotto() {
@@ -211,11 +214,10 @@ function initCosciotto() {
     gameIntervals.push(spawner);
 }
 
-// 2. RATTI (FIXED: PERDITA VITA SUL BUCO)
+// 2. RATTI
 function initRatti() {
     let html = '<div class="grid-ratti">';
     for(let i=0; i<9; i++) {
-        // onpointerdown sul buco per l'errore, sul topo per il punto
         html += `<div class="hole" onpointerdown="missRat(event)"><div class="mole" onpointerdown="whack(event, this)">🐭</div></div>`;
     }
     html += '</div>';
@@ -239,7 +241,7 @@ function initRatti() {
 }
 
 window.whack = function(e, mole) {
-    e.stopPropagation(); // Ferma la propagazione al buco!
+    e.stopPropagation();
     if (!mole.classList.contains('up') || !gameActive) return;
     score += 10; updateHUD();
     mole.innerText = "💥";
