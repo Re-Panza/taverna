@@ -3,137 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>La Taverna di Re Panza</title>
-
     <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-
-    <script src="https://re-panza.github.io/lk_tool/version.js"></script>
-    <script src="https://re-panza.github.io/re-panza-core/re_panza_brain.js"></script>
 </head>
 <body>
 
-    <div class="nav-header">
-        <a href="https://re-panza.github.io/lk_tool/index.html" class="btn-home">🏠 Torna alla Home</a>
+    <div id="desktop-block" class="hidden">
+        <div class="block-content">
+            <div class="qr-wrapper">
+                <img id="qr-code" src="" alt="QR Code">
+            </div>
+            <h2>Ingresso Riservato Mobile</h2>
+            <p>La Taverna è troppo piccola per un PC!<br>Scansiona il codice per entrare con lo smartphone.</p>
+        </div>
     </div>
 
-    <div class="page-title">
-        <h2>🍺 La Taverna di Re Panza</h2>
-        <p>Solo per veri stomaci forti! Mettiti alla prova.</p>
-    </div>
+    <div id="site-content">
+        <div class="nav-header">
+            <a href="https://re-panza.github.io/lk_tool/index.html" class="btn-home">🏠 Torna alla Home</a>
+        </div>
 
-    <div class="container glass-panel">
-        <div class="games-grid">
-            <div class="game-card" onclick="openGame('cosciotto')">
-                <div class="icon">🍗</div><h3>Acchiappa il Cosciotto</h3><div class="btn-fake">GIOCA</div>
+        <div class="page-title">
+            <h2>🍺 La Taverna di Re Panza</h2>
+            <p>Sfida il tempo: hai solo 60 secondi!</p>
+        </div>
+
+        <div class="container glass-panel">
+            <div class="games-grid">
+                <div class="game-card" onclick="openGame('cosciotto')">🍗 Cosciotto</div>
+                <div class="game-card" onclick="openGame('ratti')">🐭 Ratti</div>
+                <div class="game-card" onclick="openGame('freccette')">🎯 Freccette</div>
+                <div class="game-card" onclick="openGame('barili')">🛢️ Barili</div>
+                <div class="game-card" onclick="openGame('simon')">💡 Simon</div>
             </div>
-            <div class="game-card" onclick="openGame('ratti')">
-                <div class="icon">🐭</div><h3>Schiaccia il Ratto</h3><div class="btn-fake">GIOCA</div>
-            </div>
-            <div class="game-card" onclick="openGame('freccette')">
-                <div class="icon">🎯</div><h3>Freccette Ubriache</h3><div class="btn-fake">GIOCA</div>
-            </div>
-            <div class="game-card" onclick="openGame('barili')">
-                <div class="icon">🛢️</div><h3>Torre di Barili</h3><div class="btn-fake">GIOCA</div>
-            </div>
-            <div class="game-card" onclick="openGame('simon')">
-                <div class="icon">🍺</div><h3>Memoria dell'Oste</h3><div class="btn-fake">GIOCA</div>
+        </div>
+
+        <div class="container glass-panel chat-container">
+            <h3>📜 Bacheca della Taverna</h3>
+            <div id="tavern-chat-box">Caricamento messaggi...</div>
+            <div class="chat-input-area">
+                <input type="text" id="chat-user-name" placeholder="Tuo Nome">
+                <input type="text" id="chat-message" placeholder="Scrivi un messaggio...">
+                <button onclick="sendChat()">➤</button>
             </div>
         </div>
     </div>
 
-    <div class="container glass-panel" style="margin-top: 20px;">
-        <div class="chat-header">💬 Bacheca Pubblica</div>
-        <div id="tavern-chat-box">
-            <div class="loading-msg">Caricamento messaggi...</div>
-        </div>
-        <div class="chat-input-area">
-            <input type="text" id="chat-user-name" placeholder="Tuo Nome" maxlength="10">
-            <input type="text" id="chat-message" placeholder="Scrivi un messaggio..." maxlength="50">
-            <button onclick="sendChat()" class="btn-chat-send">➤</button>
-        </div>
-    </div>
-
-    <footer class="paypal-footer">
-        <p>Ti piace la Taverna?</p>
-        <a href="https://paypal.me/Longo11" target="_blank" class="paypal-link">☕ Offrimi un caffè</a>
-    </footer>
-
-    <div id="ai-assistant-container">
-        <div id="ai-window">
-            <div class="ai-header">
-                <span>👑 Re Panza AI</span>
-                <span onclick="toggleAI()" class="close-ai">×</span>
-            </div>
-            <div id="ai-content"><p>Benvenuto! Se hai bevuto troppo, chiedi pure aiuto a me.</p></div>
-            <div class="ai-input-area">
-                <input type="text" id="ai-input" placeholder="Chiedi al Re...">
-                <button id="ai-send-btn" onclick="chiediAlRe()">Invia</button>
-            </div>
-        </div>
-        <div id="ai-button" onclick="toggleAI()">
-            <img src="https://re-panza.github.io/lk_tool/re-panza-ai.png" alt="AI">
-        </div>
-    </div>
-
-    <div id="gameModal" class="modal-overlay">
+    <div id="gameModal" class="modal">
         <div class="modal-content">
-            <div class="close-btn" onclick="closeGame()">×</div>
+            <div class="hud">
+                <span>Punti: <b id="global-score">0</b></span>
+                <span id="game-timer">⏳ 60s</span>
+                <span>Vite: <b id="global-lives">❤️❤️❤️</b></span>
+            </div>
             
-            <div class="game-header-modal">
-                <h2 id="modal-title">GIOCO</h2>
-                <div class="hud">
-                    <span>Punti: <b id="global-score">0</b></span>
-                    <span>Vite: <b id="global-lives">❤️❤️❤️</b></span>
-                </div>
-            </div>
-
             <div id="game-stage"></div>
-
-            <div id="game-instructions" class="overlay-panel">
-                <h3>📜 Istruzioni</h3>
-                <p id="instruction-text">...</p>
-                <button onclick="startGameLogic()" class="btn-action">INIZIA!</button>
+            
+            <div id="game-instructions" class="instructions-overlay">
+                <h2 id="modal-title">GIOCO</h2>
+                <p id="instruction-text"></p>
+                <button class="btn-action" onclick="startGameLogic()">INIZIA SFIDA</button>
             </div>
 
-            <div id="save-form" class="overlay-panel hidden">
-                <h3>☠️ PARTITA FINITA!</h3>
-                <p>Punteggio: <b id="final-score-display">0</b></p>
-                <input type="text" id="player-name" placeholder="Il tuo nome..." maxlength="12">
+            <div id="save-form" class="save-overlay hidden">
+                <h3 id="end-reason">PARTITA FINITA!</h3>
+                <p>Punteggio: <span id="final-score-display">0</span></p>
+                <input type="text" id="player-name" placeholder="Tuo Nome">
                 <button onclick="submitScore()" id="btn-save" class="btn-action">INCIDI RECORD</button>
                 <button onclick="resetGame()" class="btn-retry">RIPROVA</button>
             </div>
 
             <div class="leaderboard-section">
-                <h4>🏆 Top 5 - <span id="lb-game-name">Generale</span></h4>
-                <ul id="leaderboard-list"><li>Caricamento...</li></ul>
+                <h4>🏆 Top 5 - <span id="lb-game-name"></span></h4>
+                <ul id="leaderboard-list"></ul>
             </div>
         </div>
     </div>
 
     <script src="script.js"></script>
-
-    <script>
-        function toggleAI() {
-            const w = document.getElementById('ai-window');
-            w.style.display = (w.style.display === 'block') ? 'none' : 'block';
-        }
-        async function chiediAlRe() {
-            const inp = document.getElementById('ai-input');
-            const txt = inp.value; if(!txt) return;
-            const content = document.getElementById('ai-content');
-            content.innerHTML += `<p class="user-msg"><b>Tu:</b> ${txt}</p>`;
-            inp.value = "";
-            try {
-                if(typeof askRePanza === 'function') {
-                    const risp = await askRePanza(txt);
-                    content.innerHTML += `<p class="bot-msg"><b>Re:</b> ${risp}</p>`;
-                } else { content.innerHTML += `<p class="err-msg">Cervello non connesso.</p>`; }
-            } catch(e) { content.innerHTML += `<p class="err-msg">Il Re dorme.</p>`; }
-            content.scrollTop = content.scrollHeight;
-        }
-    </script>
 </body>
 </html>
