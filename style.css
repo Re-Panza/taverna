@@ -1,51 +1,68 @@
-/* GENERALE TAVERNA */
+/* GENERALE TAVERNA - STILE RE PANZA */
 body {
-    background-color: #2c1e14;
-    color: #f4e4bc;
-    font-family: 'Courier New', Courier, monospace;
+    background-color: #1a1008; /* Marrone scurissimo */
+    color: #f4e4bc; /* Pergamena */
+    font-family: 'MedievalSharp', 'Courier New', serif;
     margin: 0; text-align: center; user-select: none;
 }
-h1 { text-shadow: 2px 2px #000; color: #d4af37; margin: 10px 0; }
-.subtitle { color: #aaa; margin-top: 0; font-style: italic; }
+h1 { text-shadow: 2px 2px #000; color: #ffcc00; margin: 10px 0; letter-spacing: 1px; }
+.subtitle { color: #d4af37; margin-top: 0; font-style: italic; border-bottom: 1px solid #5c4a35; padding-bottom: 10px; display: inline-block;}
 
 /* CARD GIOCHI */
 .games-grid {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 20px; max-width: 1000px; margin: 20px auto; padding: 10px;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px; max-width: 900px; margin: 20px auto; padding: 10px;
 }
 .game-card {
-    background: #4a3b2a; border: 3px solid #5c4a35; border-radius: 10px;
-    padding: 20px; cursor: pointer; transition: 0.3s;
-    box-shadow: 0 5px 10px rgba(0,0,0,0.5);
+    background: #4a3b2a; border: 4px solid #2e2216; border-radius: 8px;
+    padding: 15px; cursor: pointer; transition: 0.2s;
+    box-shadow: inset 0 0 20px #000, 0 5px 10px rgba(0,0,0,0.5);
+    position: relative; overflow: hidden;
 }
-.game-card:hover { transform: translateY(-5px); background: #5c4a35; border-color: #d4af37; }
-.game-card .icon { font-size: 3em; margin-bottom: 10px; }
-.btn-play { background: #8b0000; color: #fff; border: none; padding: 8px 20px; border-radius: 5px; font-weight: bold; cursor: pointer;}
+.game-card:hover { transform: scale(1.05); border-color: #ffcc00; background: #5c4a35; }
+.game-card .icon { font-size: 3.5em; margin-bottom: 5px; text-shadow: 0 4px 2px rgba(0,0,0,0.5); }
+.game-card h3 { font-size: 1.1em; color: #ffcc00; margin: 5px 0; }
+.btn-play { 
+    background: #8b0000; color: #f4e4bc; border: 2px solid #5c4a35; 
+    padding: 8px 15px; border-radius: 4px; font-weight: bold; cursor: pointer;
+    font-family: inherit; margin-top: 5px; box-shadow: 0 4px #4a0000;
+}
+.btn-play:active { box-shadow: 0 0 #000; transform: translateY(4px); }
 
 /* MODALE */
 .modal-overlay {
     display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.95); z-index: 1000;
+    background: rgba(0,0,0,0.9); z-index: 1000;
     justify-content: center; align-items: center;
 }
 .modal-content {
-    background: #222; border: 2px solid #d4af37;
-    width: 95%; max-width: 600px; height: 90vh;
-    padding: 15px; border-radius: 10px; position: relative;
+    background: #222 url('https://www.transparenttextures.com/patterns/wood-pattern.png'); /* Texture legno scuro */
+    border: 4px solid #d4af37;
+    box-shadow: 0 0 30px #000;
+    width: 95%; max-width: 500px; height: 90vh;
+    padding: 10px; border-radius: 10px; position: relative;
     display: flex; flex-direction: column;
 }
-.close-btn { position: absolute; top: 10px; right: 15px; font-size: 24px; cursor: pointer; color: #ff5555; z-index: 200; }
+.close-btn { 
+    position: absolute; top: -15px; right: -15px; 
+    background: #8b0000; color: white; border: 2px solid white; 
+    width: 35px; height: 35px; line-height: 35px; border-radius: 50%; 
+    cursor: pointer; font-weight: bold; box-shadow: 0 2px 5px #000;
+}
 .hidden { display: none !important; }
 
 /* HUD e HEADER */
-.game-header-modal { border-bottom: 1px solid #444; margin-bottom: 10px; padding-bottom: 5px; }
-.hud { display: flex; justify-content: space-around; font-size: 1.2em; color: #ffd700; margin-top: 5px;}
+.game-header-modal { 
+    background: #1a1008; border: 1px solid #5c4a35; padding: 5px; 
+    border-radius: 5px; margin-bottom: 10px; 
+}
+.hud { display: flex; justify-content: space-around; font-size: 1.3em; color: #ffcc00; }
 
 /* AREA GIOCO */
 #game-stage {
-    flex-grow: 1; background: #111; border: 1px dashed #555;
-    position: relative; overflow: hidden; margin-bottom: 10px;
-    border-radius: 5px;
+    flex-grow: 1; background: #000; border: 2px inset #5c4a35;
+    position: relative; overflow: hidden; /* Fondamentale per non far uscire gli oggetti */
+    border-radius: 5px; margin-bottom: 10px;
 }
 
 /* OVERLAY (ISTRUZIONI E GAMEOVER) */
@@ -53,63 +70,88 @@ h1 { text-shadow: 2px 2px #000; color: #d4af37; margin: 10px 0; }
     background: #f4e4bc; color: #2c1e14; /* Color Pergamena */
     padding: 20px; border-radius: 5px; position: absolute;
     top: 50%; left: 50%; transform: translate(-50%, -50%);
-    width: 80%; border: 4px solid #8b4513; z-index: 100;
+    width: 85%; border: 6px double #8b4513; z-index: 100;
     text-align: center;
-    box-shadow: 0 0 20px #000;
+    box-shadow: 0 0 50px rgba(0,0,0,0.8);
 }
-.overlay-panel h3 { margin-top: 0; text-transform: uppercase; border-bottom: 1px solid #8b4513; padding-bottom: 10px;}
-.btn-start { background: #006400; color: white; padding: 15px; width: 100%; font-size: 1.2em; cursor: pointer; border: none; font-family: inherit; font-weight: bold;}
-.btn-retry { background: #555; color: white; margin-top: 5px; padding: 10px; width: 100%; cursor: pointer;}
-#save-form input { padding: 10px; width: 80%; margin-bottom: 10px; font-family: inherit;}
+.btn-start { background: #006400; color: #f4e4bc; padding: 15px; width: 100%; font-size: 1.3em; cursor: pointer; border: 2px solid #003300; font-family: inherit; font-weight: bold; border-radius: 5px;}
+.btn-retry { background: #333; color: white; margin-top: 10px; padding: 10px; width: 100%; cursor: pointer; border: 1px solid #aaa; font-family: inherit;}
+#save-form input { padding: 10px; width: 90%; margin-bottom: 10px; font-family: inherit; border: 2px solid #8b4513; background: #fffbe6;}
 
 /* CLASSIFICA */
-.leaderboard-section { background: #1a1a1a; padding: 10px; border-radius: 5px; max-height: 120px; overflow-y: auto; font-size: 0.9em; text-align: left; }
-.leaderboard-section li { border-bottom: 1px solid #333; padding: 5px 0; display: flex; justify-content: space-between; }
+.leaderboard-section { background: #1a1008; padding: 10px; border-radius: 5px; max-height: 120px; overflow-y: auto; font-size: 0.9em; text-align: left; border: 1px solid #5c4a35;}
+.leaderboard-section li { border-bottom: 1px solid #333; padding: 5px 0; display: flex; justify-content: space-between; color: #aaa; }
+.leaderboard-section li:nth-child(1) { color: #ffd700; font-weight: bold; }
 
-/* --- GIOCO RATTI --- */
-.grid-ratti { display: flex; flex-wrap: wrap; height: 100%; width: 100%; }
+/* --- GIOCO RATTI (FIX BUG) --- */
+.grid-ratti { 
+    display: flex; flex-wrap: wrap; height: 100%; width: 100%; 
+    background: #3e2723; /* Colore terra */
+}
 .hole {
     flex: 1 0 33.33%; height: 33.33%; position: relative;
-    border: 1px solid #444; box-sizing: border-box;
-    background: #2a2a2a; overflow: hidden; /* Fondamentale per nascondere il topo */
+    box-sizing: border-box;
+    overflow: hidden; /* FIX: Nasconde il topo quando è giù */
 }
-/* Il buco nero grafico */
+/* La montagnetta di terra sopra il buco */
+.hole::before {
+    content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 30px;
+    background: linear-gradient(to top, #2e1e12, transparent); z-index: 5; pointer-events: none;
+}
+/* Il buco nero */
 .hole::after {
-    content: ''; position: absolute; bottom: 0; left: 10%; width: 80%; height: 20px;
-    background: #000; border-radius: 50%; z-index: 1;
+    content: ''; position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%); 
+    width: 70%; height: 25px; background: #000; border-radius: 50%; z-index: 1;
 }
 .mole {
-    width: 60%; height: 60%;
-    background: url('https://img.icons8.com/color/96/rat.png') no-repeat center bottom/contain;
-    position: absolute; bottom: -100px; /* Nascosto sotto */
-    left: 20%; transition: bottom 0.2s;
+    width: 60px; height: 60px;
+    background: url('https://img.icons8.com/color/96/rat.png') no-repeat center/contain;
+    position: absolute; 
+    bottom: 5px; left: 50%; margin-left: -30px; /* Centrato orizzontalmente */
+    transform: translateY(100%); /* FIX: Nascosto sotto (100% della sua altezza) */
+    transition: transform 0.2s ease-out; /* Animazione fluida */
     cursor: crosshair; z-index: 2;
 }
-.mole.up { bottom: 10px; /* Visibile sopra il buco */ }
+.mole.up { transform: translateY(0%); /* FIX: Sale su */ }
 
 /* --- GIOCO FRECCETTE --- */
 #dart-target {
-    width: 100px; height: 100px;
-    background: radial-gradient(circle, red 10%, white 10%, white 30%, red 30%, red 50%, white 50%, white 70%, black 70%);
+    width: 120px; height: 120px;
+    background: radial-gradient(circle, #e74c3c 15%, #ecf0f1 15%, #ecf0f1 30%, #e74c3c 30%, #e74c3c 45%, #ecf0f1 45%, #ecf0f1 60%, #2c3e50 60%);
     border-radius: 50%; position: absolute;
-    top: 50%; left: 50%; /* Si muove con transform nel JS */
-    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    top: 50%; left: 50%; 
+    box-shadow: 0 0 15px rgba(0,0,0,0.5); border: 2px solid #fff;
+    z-index: 1;
 }
-.center-mark { position: absolute; top: 50%; left: 50%; width: 4px; height: 4px; background: lime; transform: translate(-50%,-50%); z-index: 10; border-radius: 50%; }
+.center-mark { position: absolute; top: 50%; left: 50%; width: 6px; height: 6px; background: #00ff00; transform: translate(-50%,-50%); z-index: 10; border-radius: 50%; box-shadow: 0 0 5px #00ff00; }
 
-/* --- GIOCO SIMON --- */
-.simon-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 20px; height: 100%; box-sizing: border-box;}
-.simon-btn { border-radius: 10px; opacity: 0.3; cursor: pointer; border: 2px solid #000; transition: 0.1s; }
-.simon-btn.active { opacity: 1; box-shadow: 0 0 30px currentColor; border-color: #fff; transform: scale(0.95); }
-.s-0 { background: #ff0000; color: #ff0000; }
-.s-1 { background: #0000ff; color: #0000ff; }
-.s-2 { background: #00ff00; color: #00ff00; }
-.s-3 { background: #ffff00; color: #ffff00; }
+/* --- GIOCO BARILI (FIX SCROLL) --- */
+#barili-container {
+    width: 100%; height: 100%; position: relative;
+    display: flex; flex-direction: column-reverse; /* Impila dal basso */
+    align-items: center;
+    overflow: hidden; /* Lo scroll lo gestiamo via JS */
+}
+.barile { 
+    height: 30px; background: #8b4513; border: 2px solid #d2b48c; 
+    box-sizing: border-box; position: absolute; /* Assoluto per il posizionamento preciso */
+    border-radius: 3px;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
+}
+#moving-block { 
+    height: 30px; background: #a0522d; border: 2px solid #fff; 
+    position: absolute; z-index: 10; border-radius: 3px;
+}
 
-/* --- GIOCO BARILI --- */
-.barile { position: absolute; background: #8b4513; border: 2px solid #deb887; box-sizing: border-box; }
-#current-block { position: absolute; background: #8b4513; border: 2px solid #fff; }
-
-/* --- COSCIOTTO --- */
-#basket { position: absolute; bottom: 10px; width: 70px; height: 50px; background: url('https://img.icons8.com/color/96/picnic-basket.png') center/contain no-repeat; }
-.falling-item { position: absolute; font-size: 35px; font-weight: bold;}
+/* --- COSCIOTTO (FIX CESTINO SCOMPARSO) --- */
+#basket { 
+    position: absolute; 
+    bottom: 5px; /* Attaccato al fondo */
+    width: 80px; height: 50px; 
+    background: #8b4513; /* Colore fallback se immagine non va */
+    background-image: url('https://img.icons8.com/color/96/picnic-basket.png');
+    background-size: contain; background-repeat: no-repeat; background-position: center;
+    z-index: 100; /* Sopra tutto */
+    border-bottom: 2px solid #000;
+}
+.falling-item { position: absolute; font-size: 35px; font-weight: bold; z-index: 90;}
