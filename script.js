@@ -18,39 +18,36 @@ const instructionsPanel = document.getElementById('game-instructions');
 const instructionText = document.getElementById('instruction-text');
 const leaderboardList = document.getElementById('leaderboard-list');
 
-// LEGENDA E REGOLE
+// LEGENDA
 const GAME_RULES = {
     'cosciotto': "Muovi il cestino col MOUSE (o dito) per prendere cosciotti e birre.<br>Evita le bombe!<br>Se il cibo cade a terra, perdi una vita.",
-    'freccette': "Il bersaglio è ubriaco e si muove da solo.<br>Aspetta che passi ESATTAMENTE sotto la croce verde centrale.<br>Premi TIRA quando è al centro!",
-    'ratti': "Clicca sui ratti appena escono dai buchi!<br>Più avanti vai, più sono veloci.<br>Se sbagli mira, non succede nulla, ma sii veloce!",
-    'barili': "Impila i barili uno sull'altro.<br>Clicca (o tocca) per fermare il barile in movimento.<br>Se non sono allineati, il pezzo in eccesso viene tagliato via!",
-    'simon': "Guarda la sequenza di colori illuminati.<br>Ripetila cliccando gli stessi colori nell'ordine giusto.<br>Attenzione: la sequenza si allunga ogni volta!"
+    'freccette': "Il bersaglio oscilla.<br>Aspetta che il centro rosso passi SOTTO il puntino verde.<br>Premi TIRA quando è allineato!",
+    'ratti': "I ratti spuntano a caso.<br>Cliccali velocemente prima che rientrino!<br>Più punti fai, più diventano schegge.",
+    'barili': "Ferma il barile esattamente sopra quello precedente.<br>Se non sei preciso, il barile si rimpicciolisce.<br>Se manchi la torre... crolla tutto!",
+    'simon': "Memorizza la sequenza di luci.<br>Ripetila uguale.<br>Ogni turno si aggiunge un colore."
 };
 
-/* --- GESTIONE GENERALE --- */
+/* --- SISTEMA GENERALE --- */
 
 function openGame(gameType) {
     currentGame = gameType;
     modal.style.display = 'flex';
     document.getElementById('modal-title').innerText = gameType.toUpperCase();
     
-    // Reset UI
     saveForm.classList.add('hidden');
     gameStage.innerHTML = ''; 
     score = 0; lives = 3;
     updateHUD();
     loadLeaderboard(gameType);
 
-    // Mostra istruzioni prima di iniziare
     instructionsPanel.classList.remove('hidden');
     instructionText.innerHTML = GAME_RULES[gameType];
 }
 
 function startGameLogic() {
-    instructionsPanel.classList.add('hidden'); // Nascondi istruzioni
+    instructionsPanel.classList.add('hidden');
     gameActive = true;
     
-    // Avvia il gioco specifico
     switch(currentGame) {
         case 'ratti': initRatti(); break;
         case 'freccette': initFreccette(); break;
@@ -69,6 +66,10 @@ function stopAllGames() {
     gameActive = false;
     gameIntervals.forEach(clearInterval);
     gameIntervals = [];
+    // Rimuovi event listeners speciali se necessario
+    gameStage.onclick = null;
+    gameStage.onmousemove = null;
+    gameStage.ontouchmove = null;
 }
 
 function updateHUD() {
@@ -77,6 +78,7 @@ function updateHUD() {
 }
 
 function gameOver() {
+    if(!gameActive) return; // Evita doppi trigger
     gameActive = false;
     stopAllGames();
     saveForm.classList.remove('hidden');
@@ -84,15 +86,13 @@ function gameOver() {
 }
 
 function resetGameUI() {
-    openGame(currentGame); // Riapre le istruzioni e resetta tutto
+    openGame(currentGame);
 }
 
-/* --- LOGICA GIOCHI CORRETTA --- */
-
-// 1. RATTI (Corretto: ora usano classi per animazione fluida)
+/* --- 1. GIOCO RATTI (FIXED) --- */
 function initRatti() {
     let html = '<div class="grid-ratti">';
-    for(let i=0; i<9; i++) html += `<div class="hole"><div class="mole" onmousedown="whackRat(this)"></div></div>`;
+    for(let i=0; i<9; i++) html += `<div class="hole"><div class="mole" onmousedown="hitRat(this)"></div></div>`;
     html += '</div>';
     gameStage.innerHTML = html;
 
@@ -100,255 +100,246 @@ function initRatti() {
     
     function peep() {
         if(!gameActive) return;
-        const holes = document.querySelectorAll('.mole');
-        const randomIdx = Math.floor(Math.random() * holes.length);
-        const mole = holes[randomIdx];
+        const moles = document.querySelectorAll('.mole');
+        const randomIdx = Math.floor(Math.random() * moles.length);
+        const mole = moles[randomIdx];
 
-        if(mole.classList.contains('up')) { peep(); return; } // Se già su, riprova
+        if(mole.classList.contains('up')) { 
+            // Se è già su, riprova tra poco
+            setTimeout(peep, 100); 
+            return; 
+        }
 
         mole.classList.add('up');
 
-        // Tempo a schermo variabile (più punti = più veloce)
-        let stayTime = Math.max(400, minTime - (score * 2));
+        // Difficoltà: più punti = meno tempo
+        let stayTime = Math.max(500, 1000 - (score * 5));
         
         setTimeout(() => {
-            mole.classList.remove('up');
-            if(gameActive) setTimeout(peep, 300); // Pausa tra un ratto e l'altro
+            if(mole.classList.contains('up')) {
+                mole.classList.remove('up');
+                // Se vuoi perdere vite quando scappano, scommenta:
+                // lives--; updateHUD(); if(lives<=0) gameOver();
+            }
+            if(gameActive) setTimeout(peep, Math.random() * 500 + 200);
         }, stayTime);
     }
-    peep();
+    // Avvia il ciclo
+    setTimeout(peep, 500);
 }
 
-window.whackRat = function(mole) {
+window.hitRat = function(mole) {
     if(!mole.classList.contains('up') || !gameActive) return;
-    mole.classList.remove('up');
+    mole.classList.remove('up'); // Nascondi subito
     score += 10;
     updateHUD();
 }
 
-// 2. FRECCETTE (Corretto: Collisione matematica precisa)
+/* --- 2. GIOCO FRECCETTE --- */
 function initFreccette() {
     gameStage.innerHTML = `
         <div class="center-mark"></div>
-        <div style="position:absolute; top:50%; width:100%; height:1px; background:rgba(0,255,0,0.5);"></div>
-        <div style="position:absolute; left:50%; height:100%; width:1px; background:rgba(0,255,0,0.5);"></div>
+        <div style="position:absolute; top:50%; width:100%; height:1px; background:rgba(255,255,255,0.3);"></div>
+        <div style="position:absolute; left:50%; height:100%; width:1px; background:rgba(255,255,255,0.3);"></div>
         <div id="dart-target"></div>
-        <button onclick="checkHit()" style="position:absolute; bottom:20px; left:50%; transform:translate(-50%); padding:15px; font-weight:bold; z-index:100; cursor:pointer;">TIRA ORA!</button>
+        <button onclick="throwDart()" style="position:absolute; bottom:20px; left:50%; transform:translate(-50%); padding:15px; font-weight:bold; z-index:100; cursor:pointer; background:red; color:white; border:2px solid white;">TIRA!</button>
     `;
 
     const target = document.getElementById('dart-target');
     let angle = 0;
-    let speed = 0.05;
+    let speed = 0.04;
 
     let loop = setInterval(() => {
         angle += speed + (score * 0.0001);
-        // Movimento a cerchio
-        let radius = 100; // raggio oscillazione
+        let radius = 100; 
+        // Movimento Lissajous (più caotico)
         let x = Math.sin(angle) * radius;
-        let y = Math.cos(angle * 1.5) * radius; // 1.5 rende l'orbita irregolare (ubriaca)
+        let y = Math.cos(angle * 1.3) * radius; 
         
         target.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
-        
-        // Salviamo coordinate per il checkHit
         target.dataset.x = x;
         target.dataset.y = y;
-
     }, 20);
     gameIntervals.push(loop);
 }
 
-window.checkHit = function() {
+window.throwDart = function() {
     if(!gameActive) return;
-    
-    // Leggi coordinate salvate
     const target = document.getElementById('dart-target');
-    let x = parseFloat(target.dataset.x);
-    let y = parseFloat(target.dataset.y);
-    
-    // Distanza dal centro (0,0) usando Pitagora
-    let distance = Math.sqrt(x*x + y*y);
+    let x = parseFloat(target.dataset.x || 0);
+    let y = parseFloat(target.dataset.y || 0);
+    let dist = Math.sqrt(x*x + y*y); // Distanza dal centro (0,0)
 
-    // Il bersaglio è 100x100. Raggio 50.
-    // Centro perfetto < 10px distanza
-    if (distance < 15) {
-        score += 50;
-        flashScreen("green");
-    } else if (distance < 35) {
-        score += 20;
-        flashScreen("yellow");
-    } else if (distance < 55) {
-        score += 5;
-    } else {
+    // Hitbox: Centro < 15px, Medio < 35px, Esterno < 60px
+    if (dist < 15) { score += 50; flash("lime"); }
+    else if (dist < 35) { score += 20; flash("yellow"); }
+    else if (dist < 60) { score += 5; flash("orange"); }
+    else {
         lives--;
-        flashScreen("red");
+        flash("red");
+        if(lives <= 0) gameOver();
     }
-    
     updateHUD();
-    if(lives <= 0) gameOver();
 }
 
-function flashScreen(color) {
+function flash(color) {
     gameStage.style.borderColor = color;
-    setTimeout(() => gameStage.style.borderColor = "#555", 200);
+    setTimeout(() => gameStage.style.borderColor = "#5c4a35", 200);
 }
 
-// 3. SIMON (Corretto: Reset variabili e logica confronto)
-let simonSeq = [];
-let simonStep = 0;
-let canClick = false;
-
-function initSimon() {
-    simonSeq = [];
-    simonStep = 0;
-    canClick = false;
-    
-    gameStage.innerHTML = `
-        <div class="simon-grid">
-            <div class="simon-btn s-0" onclick="handleSimon(0)"></div>
-            <div class="simon-btn s-1" onclick="handleSimon(1)"></div>
-            <div class="simon-btn s-2" onclick="handleSimon(2)"></div>
-            <div class="simon-btn s-3" onclick="handleSimon(3)"></div>
-        </div>
-        <h2 id="simon-msg" style="position:absolute; top:40%; width:100%; text-align:center; text-shadow:2px 2px #000;"></h2>
-    `;
-    
-    setTimeout(playRound, 1000);
-}
-
-function playRound() {
-    if(!gameActive) return;
-    simonStep = 0;
-    canClick = false;
-    document.getElementById('simon-msg').innerText = "Memorizza!";
-    
-    // Aggiungi un colore
-    simonSeq.push(Math.floor(Math.random() * 4));
-    
-    let i = 0;
-    let flashInt = setInterval(() => {
-        if(i >= simonSeq.length) {
-            clearInterval(flashInt);
-            canClick = true;
-            document.getElementById('simon-msg').innerText = "Tocca a te!";
-            return;
-        }
-        flashColor(simonSeq[i]);
-        i++;
-    }, 800);
-    gameIntervals.push(flashInt);
-}
-
-function flashColor(idx) {
-    let btns = document.querySelectorAll('.simon-btn');
-    if(btns[idx]) {
-        btns[idx].classList.add('active');
-        // Suono opzionale qui
-        setTimeout(() => btns[idx].classList.remove('active'), 400);
-    }
-}
-
-window.handleSimon = function(idx) {
-    if(!canClick || !gameActive) return;
-    
-    flashColor(idx); // Feedback visivo immediato
-    
-    // Controllo correttezza
-    if(idx !== simonSeq[simonStep]) {
-        lives = 0;
-        updateHUD();
-        gameOver();
-        return;
-    }
-    
-    simonStep++;
-    
-    // Fine sequenza corretta?
-    if(simonStep >= simonSeq.length) {
-        score += simonSeq.length * 10;
-        updateHUD();
-        canClick = false;
-        document.getElementById('simon-msg').innerText = "Bravo!";
-        setTimeout(playRound, 1000);
-    }
-}
-
-// 4. BARILI (Semplificato)
+/* --- 3. GIOCO BARILI (SCROLL FIXED) --- */
 function initBarili() {
-    gameStage.innerHTML = `<div style="position:absolute; bottom:0; width:100%; height:20px; background:#5c4a35;"></div><div id="moving-block"></div>`;
+    // HTML struttura
+    gameStage.innerHTML = `<div id="moving-block"></div>`;
     
-    let stackHeight = 0;
-    let blockWidth = 200;
-    let blockPos = 0;
+    // Variabili logica
+    let stack = []; // Array dei blocchi piazzati
+    let currentWidth = 200; // Larghezza iniziale
+    let currentX = 0;
     let direction = 1;
-    let moveSpeed = 3;
-    
+    let speed = 3;
+    let level = 0;
+    const height = 30; // Altezza blocco
+    const stageWidth = gameStage.offsetWidth;
+
+    // Crea blocco mobile
     const mover = document.getElementById('moving-block');
-    mover.style.width = blockWidth + 'px';
-    mover.style.height = '30px';
-    mover.style.background = '#8b4513';
-    mover.style.border = '2px solid #fff';
-    mover.style.position = 'absolute';
-    mover.style.bottom = '20px';
+    mover.style.width = currentWidth + 'px';
+    mover.style.bottom = (level * height) + 'px';
     
+    // Loop movimento
     let loop = setInterval(() => {
-        // Movimento
-        let stageW = gameStage.offsetWidth;
-        blockPos += moveSpeed * direction;
+        const maxPos = stageWidth - currentWidth;
+        currentX += speed * direction;
         
-        if(blockPos + blockWidth > stageW || blockPos < 0) direction *= -1;
-        
-        mover.style.left = blockPos + 'px';
+        if(currentX > maxPos || currentX < 0) direction *= -1;
+        mover.style.left = currentX + 'px';
     }, 16);
     gameIntervals.push(loop);
-    
-    // CLICK EVENT SULLO STAGE
+
+    // Click handler
     gameStage.onclick = function() {
         if(!gameActive) return;
+
+        // 1. Calcola sovrapposizione
+        let prevBlock = stack[stack.length - 1];
+        let prevX = prevBlock ? parseFloat(prevBlock.style.left) : (stageWidth - 200) / 2; // Primo blocco centrato ideale
+        let prevWidth = prevBlock ? parseFloat(prevBlock.style.width) : 200;
+
+        // Se è il primo livello, è un po' più permissivo (centrato)
+        if(level === 0) { prevX = (stageWidth - 200) / 2; prevWidth = 200; }
+
+        // Calcolo differenza
+        // La posizione reale è currentX
+        // Logica semplificata: se manchi troppo muori
         
+        let error = 0;
+        if(level > 0) {
+            let left1 = currentX;
+            let right1 = currentX + currentWidth;
+            let left2 = parseFloat(prevBlock.style.left);
+            let right2 = left2 + parseFloat(prevBlock.style.width);
+
+            let overlapLeft = Math.max(left1, left2);
+            let overlapRight = Math.min(right1, right2);
+            let overlap = overlapRight - overlapLeft;
+
+            if (overlap <= 0) {
+                // Mancato totalmente
+                lives = 0; updateHUD(); gameOver(); return;
+            }
+            
+            // Nuova larghezza
+            currentWidth = overlap;
+            currentX = overlapLeft; // Sposta visivamente il blocco dove c'è overlap
+            error = 1; // Flag che abbiamo tagliato
+        }
+
         score += 10;
-        stackHeight++;
-        moveSpeed += 0.5;
-        
-        // Crea blocco fisso
+        speed += 0.5;
+
+        // 2. Crea blocco statico
         let fixed = document.createElement('div');
         fixed.className = 'barile';
-        fixed.style.width = blockWidth + 'px';
-        fixed.style.height = '30px';
-        fixed.style.left = blockPos + 'px';
-        fixed.style.bottom = (20 + ((stackHeight-1)*30)) + 'px';
+        fixed.style.width = currentWidth + 'px';
+        fixed.style.left = currentX + 'px';
+        fixed.style.bottom = (level * height) + 'px';
         gameStage.appendChild(fixed);
-        
-        // Alza il blocco mobile
-        mover.style.bottom = (20 + (stackHeight*30)) + 'px';
-        
-        // Logica semplificata: se manchi lo schermo perdi
-        // (Per renderlo perfetto servirebbe calcolo sovrapposizione, ma per ora va bene così per non complicare)
-        if(stackHeight > 10) {
-           gameStage.scrollTop = gameStage.scrollHeight;
+        stack.push(fixed);
+
+        // 3. Prepara prossimo livello
+        level++;
+        mover.style.width = currentWidth + 'px';
+        mover.style.bottom = (level * height) + 'px';
+        currentX = 0; // Riparte da sinistra
+
+        // 4. FIX SCROLL: Scrolla giù se la torre è alta
+        if ((level * height) > 200) {
+            gameStage.scrollTo({
+                top: gameStage.scrollHeight,
+                behavior: 'smooth'
+            });
         }
-        updateHUD();
     };
 }
 
-// 5. COSCIOTTO (Stesso di prima, funzionava)
+/* --- 4. SIMON --- */
+// (Codice Simon precedente era ok, lo reinserisco per sicurezza)
+let simonSeq = []; let simonStep = 0; let canClick = false;
+function initSimon() {
+    simonSeq = []; simonStep = 0; canClick = false;
+    gameStage.innerHTML = `<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; height:100%; padding:20px; box-sizing:border-box;">
+        <div class="simon-btn" style="background:red; opacity:0.4; border:2px solid black;" onclick="handleSimon(0)"></div>
+        <div class="simon-btn" style="background:blue; opacity:0.4; border:2px solid black;" onclick="handleSimon(1)"></div>
+        <div class="simon-btn" style="background:lime; opacity:0.4; border:2px solid black;" onclick="handleSimon(2)"></div>
+        <div class="simon-btn" style="background:yellow; opacity:0.4; border:2px solid black;" onclick="handleSimon(3)"></div>
+    </div><h2 id="simon-msg" style="position:absolute; top:40%; width:100%; text-align:center; text-shadow:2px 2px #000; pointer-events:none;"></h2>`;
+    setTimeout(playRound, 1000);
+}
+function playRound() {
+    if(!gameActive) return;
+    simonStep = 0; canClick = false;
+    document.getElementById('simon-msg').innerText = "Memorizza!";
+    simonSeq.push(Math.floor(Math.random() * 4));
+    let i = 0;
+    let int = setInterval(() => {
+        if(i>=simonSeq.length) { clearInterval(int); canClick=true; document.getElementById('simon-msg').innerText="Tocca a te!"; return;}
+        flashBtn(simonSeq[i]); i++;
+    }, 800);
+    gameIntervals.push(int);
+}
+function flashBtn(idx) {
+    let btns = gameStage.querySelectorAll('.simon-btn');
+    btns[idx].style.opacity = '1';
+    btns[idx].style.boxShadow = '0 0 20px white';
+    setTimeout(() => { btns[idx].style.opacity = '0.4'; btns[idx].style.boxShadow = 'none';}, 400);
+}
+window.handleSimon = function(idx) {
+    if(!canClick || !gameActive) return;
+    flashBtn(idx);
+    if(idx !== simonSeq[simonStep]) { lives=0; updateHUD(); gameOver(); return; }
+    simonStep++;
+    if(simonStep >= simonSeq.length) { score+=simonSeq.length*10; updateHUD(); canClick=false; setTimeout(playRound, 1000); }
+}
+
+/* --- 5. COSCIOTTO (FIXED) --- */
 function initCosciotto() {
     gameStage.innerHTML = `<div id="basket"></div>`;
     const basket = document.getElementById('basket');
     
-    gameStage.onmousemove = function(e) {
+    // Funzione movimento unificata
+    function moveBasket(clientX) {
         if(!gameActive) return;
         let rect = gameStage.getBoundingClientRect();
-        let x = e.clientX - rect.left - 35; // Centra
+        let x = clientX - rect.left - 40; // 40 è metà larghezza cestino
+        // Limiti
+        if(x < 0) x = 0;
+        if(x > rect.width - 80) x = rect.width - 80;
         basket.style.left = x + 'px';
-    };
-    
-    // Touch support
-    gameStage.ontouchmove = function(e) {
-        e.preventDefault();
-        let rect = gameStage.getBoundingClientRect();
-        let x = e.touches[0].clientX - rect.left - 35;
-        basket.style.left = x + 'px';
-    };
+    }
+
+    gameStage.onmousemove = (e) => moveBasket(e.clientX);
+    gameStage.ontouchmove = (e) => { e.preventDefault(); moveBasket(e.touches[0].clientX); };
 
     let spawnInt = setInterval(() => {
         let item = document.createElement('div');
@@ -362,69 +353,51 @@ function initCosciotto() {
         let fall = setInterval(() => {
             if(!gameActive) { clearInterval(fall); return; }
             let top = parseFloat(item.style.top);
-            
-            // Collisione Cesto
-            if(top > gameStage.offsetHeight - 60 && top < gameStage.offsetHeight - 10) {
-                let itemRect = item.getBoundingClientRect();
-                let basketRect = basket.getBoundingClientRect();
-                
-                if(itemRect.left < basketRect.right && itemRect.right > basketRect.left) {
-                    // Preso!
-                    if(isBomb) { lives--; flashScreen('red'); }
+            let stageH = gameStage.offsetHeight;
+
+            // Collisione
+            if(top > stageH - 70 && top < stageH - 10) {
+                let iRect = item.getBoundingClientRect();
+                let bRect = basket.getBoundingClientRect();
+                // Controllo sovrapposizione orizzontale
+                if(iRect.right > bRect.left + 10 && iRect.left < bRect.right - 10) {
+                    if(isBomb) { lives--; flash("red"); }
                     else { score += 10; }
-                    updateHUD();
-                    item.remove();
-                    clearInterval(fall);
+                    updateHUD(); item.remove(); clearInterval(fall);
                     if(lives<=0) gameOver();
                     return;
                 }
             }
             
-            // Toccato terra
-            if(top > gameStage.offsetHeight) {
-                if(!isBomb) lives--; // Perso cibo
-                updateHUD();
-                item.remove();
-                clearInterval(fall);
+            if(top > stageH) {
+                if(!isBomb) { lives--; updateHUD(); } // Cibo perso
+                item.remove(); clearInterval(fall);
                 if(lives<=0) gameOver();
             } else {
                 item.style.top = (top + 4 + (score*0.01)) + 'px';
             }
         }, 20);
         gameIntervals.push(fall);
-        
     }, 1000);
     gameIntervals.push(spawnInt);
 }
 
-/* --- SALVATAGGIO CLASSIFICA --- */
+/* --- SALVATAGGIO --- */
 function submitScore() {
     const name = document.getElementById('player-name').value;
-    if(!name) { alert("Nome mancante!"); return; }
-    
-    const btn = document.querySelector('#save-form button');
-    btn.innerText = "Incisione in corso...";
-    btn.disabled = true;
+    if(!name) return alert("Inserisci nome!");
+    const btn = document.getElementById('btn-submit');
+    btn.innerText = "Incisione..."; btn.disabled = true;
 
-    fetch(SCRIPT_URL + `?action=save&name=${encodeURIComponent(name)}&score=${score}&game=${currentGame}`, {
-        method: 'POST'
-    })
-    .then(() => {
-        alert("Salvato!");
-        resetGameUI();
-        btn.innerText = "INCIDI NELLA BACHECA";
-        btn.disabled = false;
-    });
+    fetch(SCRIPT_URL + `?action=save&name=${encodeURIComponent(name)}&score=${score}&game=${currentGame}`, {method: 'POST'})
+    .then(() => { alert("Salvato!"); resetGameUI(); btn.innerText = "INCIDI"; btn.disabled = false; })
+    .catch(() => { alert("Errore Taverna!"); btn.disabled = false; });
 }
 
-function loadLeaderboard(gameName) {
-    leaderboardList.innerHTML = "<li>Caricamento pergamena...</li>";
-    fetch(SCRIPT_URL + `?game=${gameName}`)
-    .then(res => res.json())
-    .then(data => {
+function loadLeaderboard(g) {
+    leaderboardList.innerHTML = "<li>Caricamento...</li>";
+    fetch(SCRIPT_URL + `?game=${g}`).then(r=>r.json()).then(d => {
         leaderboardList.innerHTML = "";
-        data.forEach((r, i) => {
-            leaderboardList.innerHTML += `<li><span>#${i+1} ${r.name}</span> <span>${r.score}</span></li>`;
-        });
+        d.forEach((r,i) => leaderboardList.innerHTML += `<li><span>#${i+1} ${r.name}</span><span>${r.score}</span></li>`);
     });
 }
