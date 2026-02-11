@@ -11,46 +11,35 @@
     <div class="tavern-container">
         <header>
             <h1>🍺 La Taverna di Re Panza 🍗</h1>
-            <p class="subtitle">Mettiti alla prova, avventuriero!</p>
+            <p class="subtitle">Solo per veri stomaci forti!</p>
         </header>
 
         <div class="games-grid">
-            
             <div class="game-card" onclick="openGame('cosciotto')">
                 <div class="icon">🍗</div>
                 <h3>Acchiappa il Cosciotto</h3>
-                <p>Nutri il Re!</p>
                 <button class="btn-play">GIOCA</button>
             </div>
-
             <div class="game-card" onclick="openGame('freccette')">
                 <div class="icon">🎯</div>
                 <h3>Freccette dell'Ubriaco</h3>
-                <p>Mira... hic... bene!</p>
                 <button class="btn-play">GIOCA</button>
             </div>
-
             <div class="game-card" onclick="openGame('ratti')">
                 <div class="icon">🐭</div>
                 <h3>Schiaccia il Ratto</h3>
-                <p>Pulisci la cantina!</p>
                 <button class="btn-play">GIOCA</button>
             </div>
-
             <div class="game-card" onclick="openGame('barili')">
                 <div class="icon">🛢️</div>
                 <h3>Torre di Barili</h3>
-                <p>Non farla cadere!</p>
                 <button class="btn-play">GIOCA</button>
             </div>
-
             <div class="game-card" onclick="openGame('simon')">
                 <div class="icon">🍺</div>
                 <h3>Memoria dell'Oste</h3>
-                <p>Ricordi l'ordine?</p>
                 <button class="btn-play">GIOCA</button>
             </div>
-
         </div>
     </div>
 
@@ -59,21 +48,28 @@
             <span class="close-btn" onclick="closeGame()">× ESCI</span>
             
             <div class="game-header-modal">
-                <h2 id="modal-title">Gioco</h2>
+                <h2 id="modal-title">GIOCO</h2>
                 <div class="hud">
                     <span>Punti: <b id="global-score">0</b></span>
                     <span>Vite: <b id="global-lives">❤️❤️❤️</b></span>
                 </div>
             </div>
 
-            <div id="game-stage"></div>
+            <div id="game-stage">
+                </div>
 
-            <div id="save-form" class="hidden">
+            <div id="game-instructions" class="overlay-panel">
+                <h3>📜 Regole della Taverna</h3>
+                <p id="instruction-text">...</p>
+                <button onclick="startGameLogic()" class="btn-start">INIZIA LA SFIDA!</button>
+            </div>
+
+            <div id="save-form" class="overlay-panel hidden">
                 <h3>☠️ PARTITA FINITA!</h3>
                 <p>Punteggio Finale: <b id="final-score-display">0</b></p>
                 <input type="text" id="player-name" placeholder="Il tuo nome..." maxlength="12">
                 <button onclick="submitScore()">INCIDI NELLA BACHECA</button>
-                <button onclick="restartCurrentGame()" class="btn-retry">RIPROVA</button>
+                <button onclick="resetGameUI()" class="btn-retry">RIPROVA</button>
             </div>
 
             <div class="leaderboard-section">
