@@ -1,5 +1,4 @@
 // --- CONFIGURAZIONE ---
-// INSERISCI QUI IL TUO LINK GOOGLE APPS SCRIPT
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby5lE4L1IZ13C7LaucAwB19dG_7erjtTUrOcCPmltTBcbXANAA8ewakSGwITGS4FOtV-w/exec";
 
 // --- VARIABILI GLOBALI ---
@@ -29,15 +28,11 @@ const RULES = {
 };
 
 // --- GESTIONE INTERFACCIA ---
-
 function openGame(gameName) {
     currentGame = gameName;
     score = 0; lives = 3;
     
-    // 1. Apri Modale
     modal.style.display = 'flex';
-    
-    // 2. Reset UI
     gameStage.innerHTML = '';
     saveForm.classList.add('hidden');
     instructionsPanel.classList.remove('hidden');
@@ -52,14 +47,14 @@ function startGameLogic() {
     instructionsPanel.classList.add('hidden');
     gameActive = true;
     
-    // FIX SCHERMATA NERA: Aspetta che il browser abbia disegnato il box
+    // RITARDO FONDAMENTALE PER APERTURA DOM
     setTimeout(() => {
         if (currentGame === 'cosciotto') initCosciotto();
         else if (currentGame === 'ratti') initRatti();
         else if (currentGame === 'freccette') initFreccette();
         else if (currentGame === 'barili') initBarili();
         else if (currentGame === 'simon') initSimon();
-    }, 300); // 300ms di ritardo per sicurezza
+    }, 300);
 }
 
 function closeGame() {
@@ -95,13 +90,12 @@ function resetGame() {
     stopAllGames();
     gameStage.innerHTML = '';
     saveForm.classList.add('hidden');
-    // Riavvia direttamente la logica dopo breve pausa
     setTimeout(startGameLogic, 100);
 }
 
 function flashStage(color) {
     gameStage.style.borderColor = color;
-    setTimeout(() => gameStage.style.borderColor = "#444", 200);
+    setTimeout(() => gameStage.style.borderColor = "rgba(255,255,255,0.1)", 200);
 }
 
 
@@ -112,7 +106,7 @@ function initCosciotto() {
     gameStage.innerHTML = `<div id="basket">🧺</div>`;
     const basket = document.getElementById('basket');
     
-    // Forza ricalcolo dimensioni
+    // Calcolo dimensioni ritardato
     const stageW = gameStage.offsetWidth;
     basket.style.left = (stageW / 2 - 40) + 'px';
 
@@ -123,7 +117,6 @@ function initCosciotto() {
         if (x < 0) x = 0; if (x > rect.width - 80) x = rect.width - 80;
         basket.style.left = x + 'px';
     }
-    
     gameStage.ontouchmove = (e) => { e.preventDefault(); move(e.touches[0].clientX); };
     gameStage.onmousemove = (e) => move(e.clientX);
 
@@ -141,7 +134,6 @@ function initCosciotto() {
             if (!gameActive) { clearInterval(fall); item.remove(); return; }
             let top = parseFloat(item.style.top);
             let stageH = gameStage.offsetHeight; 
-
             if (top > stageH - 90 && top < stageH - 10) {
                 const iR = item.getBoundingClientRect();
                 const bR = basket.getBoundingClientRect();
@@ -227,9 +219,8 @@ function initBarili() {
     const mover = document.getElementById('moving-block');
     let level=0, w=200, pos=0, dir=1, speed=3, h=30;
     
-    // Leggi larghezza REALE
     let stageW = gameStage.offsetWidth;
-    if(stageW === 0) stageW = 350; // Fallback di sicurezza
+    if(stageW === 0) stageW = 350; 
 
     mover.style.width=w+'px'; mover.style.bottom='0px';
     
@@ -318,7 +309,6 @@ window.clkS = function(idx) {
     if(sStep>=sSeq.length) { score+=sSeq.length*10; updateHUD(); sClick=false; setTimeout(playS, 1000); }
 };
 
-
 // --- SALVATAGGIO ---
 function submitScore() {
     const name = document.getElementById('player-name').value;
@@ -327,7 +317,7 @@ function submitScore() {
     btn.innerText = "..."; btn.disabled = true;
     
     fetch(`${SCRIPT_URL}?action=save&name=${encodeURIComponent(name)}&score=${score}&game=${currentGame}`, {method:'POST'})
-    .then(()=>{ alert("Salvato!"); btn.innerText="SALVA"; btn.disabled=false; resetGame(); })
+    .then(()=>{ alert("Salvato!"); btn.innerText="INCIDI RECORD"; btn.disabled=false; resetGame(); })
     .catch(()=>{ alert("Errore"); btn.disabled=false; });
 }
 
