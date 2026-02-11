@@ -1,8 +1,8 @@
 // --- CONFIGURAZIONE ---
-// LINK DATABASE AGGIORNATO (Versione con Chat, Report e Email Alert):
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbykh3H-5PwiGaYAnr3Gu5EsmKC-WMkBnvy2SF9RJwFM9PqtCX2f9h7vLX4YGPgzXVJ7tg/exec";
+// LINK DATABASE AGGIORNATO:
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyWSGiTqP4WYZl4zs_2mcw0DlBN0lMcOf3FPiToIiOSm7cCuEffz3sNUD05eJ7qS1-GoQ/exec";
 
-// --- VARIABILI GLOBALI DI GIOCO ---
+// --- VARIABILI GLOBALI ---
 let currentGame = null;
 let score = 0;
 let lives = 3;
@@ -19,18 +19,13 @@ const instructionsPanel = document.getElementById('game-instructions');
 const instructionsText = document.getElementById('instruction-text');
 const leaderboardList = document.getElementById('leaderboard-list');
 
-// ==========================================
-//       SISTEMA ID UTENTE & CHAT
-// ==========================================
-
-// Genera o recupera un ID univoco per il dispositivo
+// --- SISTEMA ID & CHAT ---
 function getDeviceUID() {
     let uid = localStorage.getItem('tavern_uid');
     if (!uid) {
         uid = 'usr_' + Math.random().toString(36).substr(2, 9);
         localStorage.setItem('tavern_uid', uid);
     }
-    // Recupera il nome salvato in precedenza
     const savedName = localStorage.getItem('tavern_name');
     if(savedName) {
         if(document.getElementById('player-name')) document.getElementById('player-name').value = savedName;
@@ -39,25 +34,19 @@ function getDeviceUID() {
     return uid;
 }
 
-// Aggiorna la chat ogni 4 secondi
+// Polling Chat (ogni 4 secondi)
 setInterval(loadChat, 4000); 
 
 function sendChat() {
-    const nameInput = document.getElementById('chat-user-name');
-    const msgInput = document.getElementById('chat-message');
-    
-    const name = nameInput.value || "Anonimo";
-    const msg = msgInput.value;
-    
+    const name = document.getElementById('chat-user-name').value || "Anonimo";
+    const msg = document.getElementById('chat-message').value;
     if(!msg) return;
     
-    // Pulisce input e salva il nome
-    msgInput.value = ""; 
+    document.getElementById('chat-message').value = ""; 
     localStorage.setItem('tavern_name', name); 
     
-    // Invia al server
     fetch(`${SCRIPT_URL}?action=chat_send&name=${encodeURIComponent(name)}&msg=${encodeURIComponent(msg)}&uid=${getDeviceUID()}`, {method:'POST'})
-    .then(()=> loadChat()); // Ricarica subito dopo l'invio
+    .then(()=> loadChat());
 }
 
 function loadChat() {
@@ -67,23 +56,18 @@ function loadChat() {
     fetch(`${SCRIPT_URL}?action=chat_get`)
     .then(r=>r.json())
     .then(data => {
-        if(data.length === 0) { 
-            box.innerHTML = "<div style='color:#777; padding:10px; text-align:center;'>La locanda è silenziosa...</div>"; 
-            return; 
-        }
-        
+        if(data.length === 0) { box.innerHTML = "<div style='color:#777; padding:5px; text-align:center;'>La locanda è silenziosa...</div>"; return; }
         let html = "";
         data.forEach(m => {
-            let d = new Date(m.time);
-            // Formatta ora (es: 14:30)
-            let timeStr = d.getHours().toString().padStart(2,'0') + ":" + d.getMinutes().toString().padStart(2,'0');
-            let msgId = m.time; // Usiamo il timestamp come ID per la segnalazione
+            let timeObj = new Date(m.time);
+            let timeStr = timeObj.getHours().toString().padStart(2,'0') + ":" + timeObj.getMinutes().toString().padStart(2,'0');
+            let msgId = m.time;
 
-            // Colore speciale per Re Panza
+            // Colore diverso per Re Panza
             let nameStyle = "color:var(--accent)";
             if(m.name.toLowerCase().includes("re panza")) nameStyle = "color:var(--gold); text-shadow:0 0 5px var(--gold);";
 
-            // Struttura HTML: Testo a sinistra, Bandiera a destra
+            // Struttura Flexbox: Testo a Sinistra, Bandiera a Destra
             html += `<div class="chat-msg">
                         <div class="chat-content-wrapper">
                             <span class="chat-time">[${timeStr}]</span> 
@@ -94,34 +78,31 @@ function loadChat() {
                      </div>`;
         });
         
-        // Aggiorna solo se ci sono nuovi messaggi (evita sfarfallio)
+        // Aggiorna solo se necessario
         if(box.innerHTML.length < 50 || box.childElementCount !== data.length) { 
             box.innerHTML = html; 
-            box.scrollTop = box.scrollHeight; // Scroll automatico in basso
+            box.scrollTop = box.scrollHeight;
         }
     })
-    .catch(e => console.log("Chat offline o errore connessione"));
+    .catch(e => console.log("Chat offline"));
 }
 
-// Funzione per Segnalare Messaggi
+// Funzione Segnalazione
 window.reportMsg = function(timeId) {
-    if(!confirm("Vuoi segnalare questo messaggio ai moderatori per contenuti inappropriati?")) return;
+    if(!confirm("Vuoi segnalare questo messaggio ai moderatori?")) return;
     
     fetch(`${SCRIPT_URL}?action=chat_report&time=${encodeURIComponent(timeId)}`)
     .then(r => r.json())
     .then(d => {
-        if(d.result === "reported") alert("Segnalazione inviata! Le guardie del Re stanno controllando.");
-        else alert("Messaggio già segnalato o già gestito.");
+        if(d.result === "reported") alert("Segnalazione inviata! Le guardie stanno controllando.");
+        else alert("Messaggio già segnalato o gestito.");
     });
 };
 
-// ==========================================
-//       GESTIONE GIOCHI (HUB)
-// ==========================================
-
+// --- GESTIONE GIOCHI ---
 const RULES = {
-    'cosciotto': "Trascina il cestino 🧺 col dito.<br>Prendi il cibo 🍗, evita le bombe 💣!",
-    'ratti': "Tocca i topi 🐭 appena escono.<br>⚠️ Se sbagli mira e tocchi il buco vuoto, perdi una vita!",
+    'cosciotto': "Trascina il cestino 🧺 col dito.<br>Prendi cibo 🍗, evita le bombe 💣!",
+    'ratti': "Tocca i topi 🐭 appena escono.<br>⚠️ Se tocchi il buco vuoto perdi una vita!",
     'freccette': "Tira quando il centro rosso è allineato col puntino verde.",
     'barili': "Impila i barili.<br>Tocca per fermare il blocco al momento giusto.",
     'simon': "Memorizza la sequenza di luci e ripetila."
@@ -130,8 +111,6 @@ const RULES = {
 function openGame(gameName) {
     currentGame = gameName;
     score = 0; lives = 3;
-    
-    // Setup UI
     modal.style.display = 'flex';
     gameStage.innerHTML = '';
     saveForm.classList.add('hidden');
@@ -139,20 +118,18 @@ function openGame(gameName) {
     instructionsText.innerHTML = RULES[gameName] || "Gioca!";
     document.getElementById('modal-title').innerText = gameName.toUpperCase();
     
-    // Aggiorna titolo classifica
+    // Titolo classifica
     const lbTitle = document.getElementById('lb-game-name');
     if(lbTitle) lbTitle.innerText = gameName.toUpperCase();
     
     updateHUD();
-    loadLeaderboard(gameName); // Carica la classifica specifica del gioco
-    getDeviceUID(); // Inizializza ID utente
+    loadLeaderboard(gameName);
+    getDeviceUID(); 
 }
 
 function startGameLogic() {
     instructionsPanel.classList.add('hidden');
     gameActive = true;
-    
-    // RITARDO DI 300ms: Fondamentale per far calcolare al browser le dimensioni corrette
     setTimeout(() => {
         if (currentGame === 'cosciotto') initCosciotto();
         else if (currentGame === 'ratti') initRatti();
@@ -195,7 +172,6 @@ function resetGame() {
     stopAllGames();
     gameStage.innerHTML = '';
     saveForm.classList.add('hidden');
-    // Riavvia il gioco dopo breve pausa
     setTimeout(startGameLogic, 100);
 }
 
@@ -204,28 +180,22 @@ function flashStage(color) {
     setTimeout(() => gameStage.style.borderColor = "rgba(255,255,255,0.1)", 200);
 }
 
-// ==========================================
-//       LOGICA DEI 5 MINIGIOCHI
-// ==========================================
+// --- GIOCHI ---
 
 // 1. COSCIOTTO
 function initCosciotto() {
     gameStage.innerHTML = `<div id="basket">🧺</div>`;
     const basket = document.getElementById('basket');
     const stageW = gameStage.offsetWidth;
-    basket.style.left = (stageW / 2 - 40) + 'px'; // Start al centro
+    basket.style.left = (stageW / 2 - 40) + 'px';
 
     function move(xInput) {
         if (!gameActive) return;
         const rect = gameStage.getBoundingClientRect();
         let x = xInput - rect.left - 40;
-        // Limiti laterali
-        if (x < 0) x = 0; 
-        if (x > rect.width - 80) x = rect.width - 80;
+        if (x < 0) x = 0; if (x > rect.width - 80) x = rect.width - 80;
         basket.style.left = x + 'px';
     }
-    
-    // Supporto Touch e Mouse
     gameStage.ontouchmove = (e) => { e.preventDefault(); move(e.touches[0].clientX); };
     gameStage.onmousemove = (e) => move(e.clientX);
 
@@ -238,13 +208,11 @@ function initCosciotto() {
         item.style.top = '-50px';
         gameStage.appendChild(item);
         
-        let speed = 4 + (score * 0.05); // Accelera col punteggio
+        let speed = 4 + (score * 0.05);
         let fall = setInterval(() => {
             if (!gameActive) { clearInterval(fall); item.remove(); return; }
             let top = parseFloat(item.style.top);
             let stageH = gameStage.offsetHeight; 
-            
-            // Collisione col cestino
             if (top > stageH - 90 && top < stageH - 10) {
                 const iR = item.getBoundingClientRect();
                 const bR = basket.getBoundingClientRect();
@@ -254,9 +222,8 @@ function initCosciotto() {
                     if (lives <= 0) gameOver(); return;
                 }
             }
-            // Caduto fuori
             if (top > stageH) {
-                if (!isBomb) { lives--; updateHUD(); } // Perdi vita se cade cibo
+                if (!isBomb) { lives--; updateHUD(); }
                 item.remove(); clearInterval(fall);
                 if (lives <= 0) gameOver();
             } else { item.style.top = (top + speed) + 'px'; }
@@ -266,11 +233,10 @@ function initCosciotto() {
     gameIntervals.push(spawner);
 }
 
-// 2. RATTI (CORRETTO)
+// 2. RATTI
 function initRatti() {
     let html = '<div class="grid-ratti">';
     for(let i=0; i<9; i++) {
-        // Assegniamo missRat al buco e whack al topo
         html += `<div class="hole" onpointerdown="missRat(event)"><div class="mole" onpointerdown="whack(event, this)">🐭</div></div>`;
     }
     html += '</div>';
@@ -281,7 +247,6 @@ function initRatti() {
         const moles = document.querySelectorAll('.mole');
         if(moles.length === 0) return;
         const mole = moles[Math.floor(Math.random() * moles.length)];
-        
         if (mole.classList.contains('up')) { setTimeout(peep, 100); return; }
         
         mole.innerText = "🐭"; mole.classList.add('up');
@@ -294,9 +259,8 @@ function initRatti() {
     setTimeout(peep, 500);
 }
 
-// Colpito il topo (PUNTO)
 window.whack = function(e, mole) {
-    e.stopPropagation(); // Blocca l'evento, così non attiva missRat sul buco
+    e.stopPropagation();
     if (!mole.classList.contains('up') || !gameActive) return;
     score += 10; updateHUD();
     mole.innerText = "💥";
@@ -304,7 +268,6 @@ window.whack = function(e, mole) {
     setTimeout(() => mole.innerText = "🐭", 200);
 };
 
-// Colpito il buco (ERRORE)
 window.missRat = function(e) {
     if (!gameActive) return;
     lives--; 
@@ -345,9 +308,7 @@ function initBarili() {
     const world = document.getElementById('tower-world');
     const mover = document.getElementById('moving-block');
     let level=0, w=200, pos=0, dir=1, speed=3, h=30;
-    
-    let stageW = gameStage.offsetWidth; if(stageW===0) stageW=350; // Fallback
-    
+    let stageW = gameStage.offsetWidth; if(stageW===0) stageW=350; 
     mover.style.width=w+'px'; mover.style.bottom='0px';
     
     let loop = setInterval(() => {
@@ -358,7 +319,7 @@ function initBarili() {
     gameIntervals.push(loop);
     
     gameStage.onpointerdown = function(e) {
-        if(e.target.tagName === 'BUTTON') return; // Ignora se clicchi bottoni
+        if(e.target.tagName === 'BUTTON') return;
         if(!gameActive) return;
         
         let prevLeft = (stageW - 200)/2;
@@ -389,7 +350,6 @@ function initBarili() {
         score+=10; level++; w=overlap; speed+=0.5;
         mover.style.width=w+'px'; mover.style.bottom=(level*h)+'px'; pos=0;
         
-        // Telecamera sale
         if (level*h > gameStage.offsetHeight/2) {
             world.style.transform = `translateY(${ (level*h) - (gameStage.offsetHeight/2) }px)`;
         }
@@ -433,38 +393,31 @@ window.clkS = function(idx) {
     if(sStep>=sSeq.length) { score+=sSeq.length*10; updateHUD(); sClick=false; setTimeout(playS, 1000); }
 };
 
-// ==========================================
-//       SALVATAGGIO & CLASSIFICHE
-// ==========================================
-
+// --- SALVATAGGIO ---
 function submitScore() {
     const name = document.getElementById('player-name').value;
-    if(!name) return alert("Inserisci nome per la gloria!");
+    if(!name) return alert("Inserisci nome");
     
     localStorage.setItem('tavern_name', name);
     const uid = getDeviceUID();
     const btn = document.getElementById('btn-save');
     btn.innerText = "Salvataggio..."; btn.disabled = true;
     
-    // Invia i dati al backend
     fetch(`${SCRIPT_URL}?action=save&name=${encodeURIComponent(name)}&score=${score}&game=${currentGame}&uid=${uid}`, {method:'POST'})
     .then(()=>{ 
         alert("Record salvato!"); 
         btn.innerText="INCIDI RECORD"; 
         btn.disabled=false; 
         
-        // Nasconde il form e aggiorna subito la classifica SOTTOSTANTE
         saveForm.classList.add('hidden');
-        loadLeaderboard(currentGame); 
-        
-        // Torna a mostrare le istruzioni (o potresti riavviare subito)
+        loadLeaderboard(currentGame);
         instructionsPanel.classList.remove('hidden');
     })
-    .catch(()=>{ alert("Errore di connessione col piccione viaggiatore."); btn.disabled=false; });
+    .catch(()=>{ alert("Errore di connessione"); btn.disabled=false; });
 }
 
 function loadLeaderboard(g) {
-    leaderboardList.innerHTML = "<li>Caricamento pergamene...</li>";
+    leaderboardList.innerHTML = "<li>Caricamento...</li>";
     fetch(`${SCRIPT_URL}?game=${g}`).then(r=>r.json()).then(d=>{
         leaderboardList.innerHTML="";
         if(!d.length) leaderboardList.innerHTML="<li>Nessun record! Sii il primo!</li>";
