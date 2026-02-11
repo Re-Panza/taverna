@@ -1,60 +1,62 @@
-// URL SCRIPT GOOGLE (INSERISCI IL TUO QUI!)
+// CONFIGURAZIONE
+// Inserisci qui il TUO URL dello script Google
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby5lE4L1IZ13C7LaucAwB19dG_7erjtTUrOcCPmltTBcbXANAA8ewakSGwITGS4FOtV-w/exec";
 
-// STATO GLOBALE
+// VARIABILI DI GIOCO GLOBALI
 let currentGame = null;
 let score = 0;
 let lives = 3;
-let gameIntervals = [];
 let gameActive = false;
+let gameIntervals = []; // Array per salvare tutti i timer e pulirli alla fine
 
-// DOM ELEMENTS
+// ELEMENTI DOM
 const modal = document.getElementById('gameModal');
 const gameStage = document.getElementById('game-stage');
 const scoreDisplay = document.getElementById('global-score');
 const livesDisplay = document.getElementById('global-lives');
 const saveForm = document.getElementById('save-form');
 const instructionsPanel = document.getElementById('game-instructions');
-const instructionText = document.getElementById('instruction-text');
+const instructionsText = document.getElementById('instruction-text');
 const leaderboardList = document.getElementById('leaderboard-list');
 
-// LEGENDA
-const GAME_RULES = {
-    'cosciotto': "Muovi il cestino col MOUSE (o dito) per prendere cosciotti e birre.<br>Evita le bombe!<br>Se il cibo cade a terra, perdi una vita.",
-    'freccette': "Il bersaglio oscilla.<br>Aspetta che il centro rosso passi SOTTO il puntino verde.<br>Premi TIRA quando è allineato!",
-    'ratti': "I ratti spuntano a caso.<br>Cliccali velocemente prima che rientrino!<br>Più punti fai, più diventano schegge.",
-    'barili': "Ferma il barile esattamente sopra quello precedente.<br>Se non sei preciso, il barile si rimpicciolisce.<br>Se manchi la torre... crolla tutto!",
-    'simon': "Memorizza la sequenza di luci.<br>Ripetila uguale.<br>Ogni turno si aggiunge un colore."
+// TESTI ISTRUZIONI
+const RULES = {
+    'cosciotto': "Muovi il cestino 🧺 per raccogliere cibo 🍗.<br>Evita le bombe 💣!<br>Se il cibo cade, perdi una vita.",
+    'ratti': "Tocca i topi 🐭 appena escono dai buchi.<br>Sii veloce! Più punti fai, più sono rapidi.",
+    'freccette': "Il bersaglio oscilla.<br>Premi 'TIRA' quando il centro rosso è allineato col puntino verde.",
+    'barili': "Impila i barili.<br>Clicca per fermare il blocco.<br>Se non sei preciso, il barile si taglia!",
+    'simon': "Memorizza la sequenza di colori.<br>Ripetila. Ad ogni turno si aggiunge un colore."
 };
 
-/* --- SISTEMA GENERALE --- */
+/* --- GESTIONE SISTEMA --- */
 
-function openGame(gameType) {
-    currentGame = gameType;
-    modal.style.display = 'flex';
-    document.getElementById('modal-title').innerText = gameType.toUpperCase();
+function openGame(gameName) {
+    currentGame = gameName;
+    score = 0;
+    lives = 3;
     
+    // UI Reset
+    modal.style.display = 'flex';
+    gameStage.innerHTML = '';
     saveForm.classList.add('hidden');
-    gameStage.innerHTML = ''; 
-    score = 0; lives = 3;
-    updateHUD();
-    loadLeaderboard(gameType);
-
     instructionsPanel.classList.remove('hidden');
-    instructionText.innerHTML = GAME_RULES[gameType];
+    instructionsText.innerHTML = RULES[gameName];
+    document.getElementById('modal-title').innerText = gameName.toUpperCase();
+    
+    updateHUD();
+    loadLeaderboard(gameName);
 }
 
 function startGameLogic() {
     instructionsPanel.classList.add('hidden');
     gameActive = true;
     
-    switch(currentGame) {
-        case 'ratti': initRatti(); break;
-        case 'freccette': initFreccette(); break;
-        case 'barili': initBarili(); break;
-        case 'simon': initSimon(); break;
-        case 'cosciotto': initCosciotto(); break;
-    }
+    // Switch giochi
+    if (currentGame === 'cosciotto') initCosciotto();
+    else if (currentGame === 'ratti') initRatti();
+    else if (currentGame === 'freccette') initFreccette();
+    else if (currentGame === 'barili') initBarili();
+    else if (currentGame === 'simon') initSimon();
 }
 
 function closeGame() {
@@ -64,9 +66,10 @@ function closeGame() {
 
 function stopAllGames() {
     gameActive = false;
+    // Ferma tutti i loop
     gameIntervals.forEach(clearInterval);
     gameIntervals = [];
-    // Rimuovi event listeners speciali se necessario
+    // Rimuovi listener
     gameStage.onclick = null;
     gameStage.onmousemove = null;
     gameStage.ontouchmove = null;
@@ -78,326 +81,401 @@ function updateHUD() {
 }
 
 function gameOver() {
-    if(!gameActive) return; // Evita doppi trigger
+    if (!gameActive) return;
     gameActive = false;
     stopAllGames();
+    
+    // Mostra form salvataggio
     saveForm.classList.remove('hidden');
     document.getElementById('final-score-display').innerText = score;
 }
 
-function resetGameUI() {
+function resetGame() {
+    stopAllGames();
     openGame(currentGame);
 }
 
-/* --- 1. GIOCO RATTI (FIXED) --- */
+/* --- GIOCO 1: ACCHIAPPA IL COSCIOTTO --- */
+function initCosciotto() {
+    // 1. Crea il Cestino (Emoji)
+    gameStage.innerHTML = `<div id="basket">🧺</div>`;
+    const basket = document.getElementById('basket');
+    
+    // 2. Movimento Cestino
+    function moveBasket(clientX) {
+        if (!gameActive) return;
+        const rect = gameStage.getBoundingClientRect();
+        let x = clientX - rect.left - 40; // Centra l'emoji (larga ca 80px)
+        
+        // Limiti
+        if (x < 0) x = 0;
+        if (x > rect.width - 80) x = rect.width - 80;
+        
+        basket.style.left = x + 'px';
+    }
+    
+    // Listener Mouse e Touch
+    gameStage.onmousemove = (e) => moveBasket(e.clientX);
+    gameStage.ontouchmove = (e) => { e.preventDefault(); moveBasket(e.touches[0].clientX); };
+
+    // 3. Spawner Oggetti
+    let spawner = setInterval(() => {
+        const item = document.createElement('div');
+        item.classList.add('falling-item');
+        
+        // 20% Bomba, 80% Cibo
+        const isBomb = Math.random() > 0.8;
+        item.innerText = isBomb ? '💣' : (Math.random() > 0.5 ? '🍗' : '🍺');
+        
+        // Posizione casuale
+        item.style.left = Math.random() * (gameStage.offsetWidth - 50) + 'px';
+        item.style.top = '-50px';
+        gameStage.appendChild(item);
+        
+        // Loop Caduta Singolo Oggetto
+        let fallSpeed = 4 + (score * 0.05); // Accelera col punteggio
+        
+        let fallLoop = setInterval(() => {
+            if (!gameActive) { clearInterval(fallLoop); item.remove(); return; }
+            
+            let top = parseFloat(item.style.top);
+            const limit = gameStage.offsetHeight;
+            
+            // Collisione
+            if (top > limit - 90 && top < limit - 10) {
+                const iRect = item.getBoundingClientRect();
+                const bRect = basket.getBoundingClientRect();
+                
+                // Sovrapposizione
+                if (iRect.right > bRect.left + 10 && iRect.left < bRect.right - 10) {
+                    // Preso!
+                    if (isBomb) {
+                        lives--; flashStage('red');
+                    } else {
+                        score += 10;
+                    }
+                    updateHUD();
+                    item.remove();
+                    clearInterval(fallLoop);
+                    if (lives <= 0) gameOver();
+                    return;
+                }
+            }
+            
+            // Toccato terra
+            if (top > limit) {
+                if (!isBomb) { lives--; updateHUD(); } // Cibo perso
+                item.remove();
+                clearInterval(fallLoop);
+                if (lives <= 0) gameOver();
+            } else {
+                item.style.top = (top + fallSpeed) + 'px';
+            }
+        }, 20);
+        gameIntervals.push(fallLoop);
+        
+    }, 1000); // Spawn ogni secondo
+    gameIntervals.push(spawner);
+}
+
+
+/* --- GIOCO 2: SCHIACCIA IL RATTO --- */
 function initRatti() {
+    // Genera griglia
     let html = '<div class="grid-ratti">';
-    for(let i=0; i<9; i++) html += `<div class="hole"><div class="mole" onmousedown="hitRat(this)"></div></div>`;
+    for (let i = 0; i < 9; i++) {
+        html += `<div class="hole"><div class="mole" onmousedown="whack(this)">🐭</div></div>`;
+    }
     html += '</div>';
     gameStage.innerHTML = html;
-
-    let minTime = 800;
     
+    // Loop comparsa
     function peep() {
-        if(!gameActive) return;
+        if (!gameActive) return;
         const moles = document.querySelectorAll('.mole');
-        const randomIdx = Math.floor(Math.random() * moles.length);
-        const mole = moles[randomIdx];
-
-        if(mole.classList.contains('up')) { 
-            // Se è già su, riprova tra poco
-            setTimeout(peep, 100); 
-            return; 
+        const rand = Math.floor(Math.random() * moles.length);
+        const mole = moles[rand];
+        
+        if (mole.classList.contains('up')) {
+            setTimeout(peep, 100); return;
         }
-
+        
+        mole.innerText = "🐭"; // Reset emoji
         mole.classList.add('up');
-
-        // Difficoltà: più punti = meno tempo
-        let stayTime = Math.max(500, 1000 - (score * 5));
+        
+        // Tempo a schermo variabile
+        const time = Math.max(500, 1200 - (score * 10));
         
         setTimeout(() => {
-            if(mole.classList.contains('up')) {
-                mole.classList.remove('up');
-                // Se vuoi perdere vite quando scappano, scommenta:
-                // lives--; updateHUD(); if(lives<=0) gameOver();
-            }
-            if(gameActive) setTimeout(peep, Math.random() * 500 + 200);
-        }, stayTime);
+            mole.classList.remove('up');
+            if (gameActive) setTimeout(peep, Math.random() * 500 + 200);
+        }, time);
     }
-    // Avvia il ciclo
+    
     setTimeout(peep, 500);
 }
 
-window.hitRat = function(mole) {
-    if(!mole.classList.contains('up') || !gameActive) return;
-    mole.classList.remove('up'); // Nascondi subito
+window.whack = function(mole) {
+    if (!mole.classList.contains('up') || !gameActive) return;
     score += 10;
     updateHUD();
-}
+    mole.innerText = "💥"; // Feedback visivo
+    setTimeout(() => mole.classList.remove('up'), 200);
+};
 
-/* --- 2. GIOCO FRECCETTE --- */
+
+/* --- GIOCO 3: FRECCETTE DELL'UBRIACO --- */
 function initFreccette() {
     gameStage.innerHTML = `
         <div class="center-mark"></div>
-        <div style="position:absolute; top:50%; width:100%; height:1px; background:rgba(255,255,255,0.3);"></div>
-        <div style="position:absolute; left:50%; height:100%; width:1px; background:rgba(255,255,255,0.3);"></div>
         <div id="dart-target"></div>
-        <button onclick="throwDart()" style="position:absolute; bottom:20px; left:50%; transform:translate(-50%); padding:15px; font-weight:bold; z-index:100; cursor:pointer; background:red; color:white; border:2px solid white;">TIRA!</button>
+        <button onclick="throwDart()" class="btn-play" style="position:absolute; bottom:20px; left:50%; transform:translateX(-50%); z-index:200;">TIRA!</button>
     `;
-
+    
     const target = document.getElementById('dart-target');
     let angle = 0;
-    let speed = 0.04;
-
+    
     let loop = setInterval(() => {
-        angle += speed + (score * 0.0001);
-        let radius = 100; 
-        // Movimento Lissajous (più caotico)
-        let x = Math.sin(angle) * radius;
-        let y = Math.cos(angle * 1.3) * radius; 
+        let speed = 0.04 + (score * 0.0001);
+        angle += speed;
+        
+        // Matematica oscillazione
+        const radius = 100;
+        const x = Math.sin(angle) * radius;
+        const y = Math.cos(angle * 1.3) * radius; // 1.3 rende l'orbita irregolare
         
         target.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
+        
+        // Salviamo coordinate per il calcolo hit
         target.dataset.x = x;
         target.dataset.y = y;
+        
     }, 20);
     gameIntervals.push(loop);
 }
 
 window.throwDart = function() {
-    if(!gameActive) return;
-    const target = document.getElementById('dart-target');
-    let x = parseFloat(target.dataset.x || 0);
-    let y = parseFloat(target.dataset.y || 0);
-    let dist = Math.sqrt(x*x + y*y); // Distanza dal centro (0,0)
-
-    // Hitbox: Centro < 15px, Medio < 35px, Esterno < 60px
-    if (dist < 15) { score += 50; flash("lime"); }
-    else if (dist < 35) { score += 20; flash("yellow"); }
-    else if (dist < 60) { score += 5; flash("orange"); }
+    if (!gameActive) return;
+    const t = document.getElementById('dart-target');
+    const x = parseFloat(t.dataset.x || 0);
+    const y = parseFloat(t.dataset.y || 0);
+    
+    // Distanza dal centro (0,0)
+    const dist = Math.sqrt(x*x + y*y);
+    
+    // Hitbox: Centro < 15px
+    if (dist < 15) { score += 50; flashStage('lime'); }
+    else if (dist < 40) { score += 20; flashStage('yellow'); }
+    else if (dist < 70) { score += 5; flashStage('orange'); }
     else {
-        lives--;
-        flash("red");
-        if(lives <= 0) gameOver();
+        lives--; flashStage('red');
+        if (lives <= 0) gameOver();
     }
     updateHUD();
-}
+};
 
-function flash(color) {
-    gameStage.style.borderColor = color;
-    setTimeout(() => gameStage.style.borderColor = "#5c4a35", 200);
-}
 
-/* --- 3. GIOCO BARILI (SCROLL FIXED) --- */
+/* --- GIOCO 4: TORRE DI BARILI --- */
 function initBarili() {
-    // HTML struttura
     gameStage.innerHTML = `<div id="moving-block"></div>`;
     
-    // Variabili logica
-    let stack = []; // Array dei blocchi piazzati
-    let currentWidth = 200; // Larghezza iniziale
-    let currentX = 0;
+    let level = 0;
+    let width = 200;
+    let pos = 0;
     let direction = 1;
     let speed = 3;
-    let level = 0;
-    const height = 30; // Altezza blocco
+    const height = 30;
     const stageWidth = gameStage.offsetWidth;
-
-    // Crea blocco mobile
     const mover = document.getElementById('moving-block');
-    mover.style.width = currentWidth + 'px';
-    mover.style.bottom = (level * height) + 'px';
+    
+    // Setup iniziale
+    mover.style.width = width + 'px';
+    mover.style.bottom = '0px';
     
     // Loop movimento
     let loop = setInterval(() => {
-        const maxPos = stageWidth - currentWidth;
-        currentX += speed * direction;
+        const max = stageWidth - width;
+        pos += speed * direction;
         
-        if(currentX > maxPos || currentX < 0) direction *= -1;
-        mover.style.left = currentX + 'px';
+        if (pos > max || pos < 0) direction *= -1;
+        mover.style.left = pos + 'px';
     }, 16);
     gameIntervals.push(loop);
-
-    // Click handler
+    
+    // Click per fermare
     gameStage.onclick = function() {
-        if(!gameActive) return;
-
-        // 1. Calcola sovrapposizione
-        let prevBlock = stack[stack.length - 1];
-        let prevX = prevBlock ? parseFloat(prevBlock.style.left) : (stageWidth - 200) / 2; // Primo blocco centrato ideale
-        let prevWidth = prevBlock ? parseFloat(prevBlock.style.width) : 200;
-
-        // Se è il primo livello, è un po' più permissivo (centrato)
-        if(level === 0) { prevX = (stageWidth - 200) / 2; prevWidth = 200; }
-
-        // Calcolo differenza
-        // La posizione reale è currentX
-        // Logica semplificata: se manchi troppo muori
+        if (!gameActive) return;
         
-        let error = 0;
-        if(level > 0) {
-            let left1 = currentX;
-            let right1 = currentX + currentWidth;
-            let left2 = parseFloat(prevBlock.style.left);
-            let right2 = left2 + parseFloat(prevBlock.style.width);
-
-            let overlapLeft = Math.max(left1, left2);
-            let overlapRight = Math.min(right1, right2);
-            let overlap = overlapRight - overlapLeft;
-
-            if (overlap <= 0) {
-                // Mancato totalmente
-                lives = 0; updateHUD(); gameOver(); return;
-            }
-            
-            // Nuova larghezza
-            currentWidth = overlap;
-            currentX = overlapLeft; // Sposta visivamente il blocco dove c'è overlap
-            error = 1; // Flag che abbiamo tagliato
+        // Calcoli per il taglio
+        // Se è il primo blocco (level 0), è sempre valido, ma definiamo la base
+        // Se level > 0, confrontiamo con quello sotto
+        
+        // Logica semplificata per gameplay fluido:
+        // Confrontiamo con il "Centro ideale" o il blocco precedente.
+        // Qui confrontiamo col blocco precedente salvato nel DOM
+        const prevBlock = document.getElementById(`barile-${level-1}`);
+        let prevLeft = prevBlock ? parseFloat(prevBlock.style.left) : (stageWidth - 200) / 2;
+        let prevWidth = prevBlock ? parseFloat(prevBlock.style.width) : 200;
+        
+        // Al primo livello permettiamo di piazzare ovunque, ma centrare è meglio
+        if (level === 0) { prevLeft = (stageWidth - 200) / 2; prevWidth = 200; }
+        
+        const currentLeft = pos;
+        const currentRight = pos + width;
+        const targetLeft = prevLeft;
+        const targetRight = prevLeft + prevWidth;
+        
+        // Calcolo overlap
+        const overlapLeft = Math.max(currentLeft, targetLeft);
+        const overlapRight = Math.min(currentRight, targetRight);
+        const overlap = overlapRight - overlapLeft;
+        
+        if (level > 0 && overlap <= 0) {
+            // Mancato!
+            lives = 0; gameOver(); return;
         }
-
-        score += 10;
-        speed += 0.5;
-
-        // 2. Crea blocco statico
-        let fixed = document.createElement('div');
+        
+        // Aggiorna larghezza (se level > 0)
+        let newWidth = width;
+        let newLeft = pos;
+        
+        if (level > 0) {
+            newWidth = overlap;
+            newLeft = overlapLeft;
+        }
+        
+        // Crea blocco fisso
+        const fixed = document.createElement('div');
         fixed.className = 'barile';
-        fixed.style.width = currentWidth + 'px';
-        fixed.style.left = currentX + 'px';
+        fixed.id = `barile-${level}`;
+        fixed.style.width = newWidth + 'px';
+        fixed.style.left = newLeft + 'px';
         fixed.style.bottom = (level * height) + 'px';
         gameStage.appendChild(fixed);
-        stack.push(fixed);
-
-        // 3. Prepara prossimo livello
+        
+        score += 10;
         level++;
-        mover.style.width = currentWidth + 'px';
+        width = newWidth;
+        speed += 0.5;
+        
+        // Resetta mover
+        mover.style.width = width + 'px';
         mover.style.bottom = (level * height) + 'px';
-        currentX = 0; // Riparte da sinistra
-
-        // 4. FIX SCROLL: Scrolla giù se la torre è alta
-        if ((level * height) > 200) {
-            gameStage.scrollTo({
-                top: gameStage.scrollHeight,
-                behavior: 'smooth'
-            });
+        pos = 0; // R parte da sinistra
+        
+        // Scroll camera
+        if (level * height > 200) {
+            gameStage.scrollTo({ top: gameStage.scrollHeight, behavior: 'smooth' });
         }
     };
 }
 
-/* --- 4. SIMON --- */
-// (Codice Simon precedente era ok, lo reinserisco per sicurezza)
-let simonSeq = []; let simonStep = 0; let canClick = false;
+
+/* --- GIOCO 5: SIMON --- */
+let simonSeq = [];
+let simonStep = 0;
+let canClick = false;
+
 function initSimon() {
-    simonSeq = []; simonStep = 0; canClick = false;
-    gameStage.innerHTML = `<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; height:100%; padding:20px; box-sizing:border-box;">
-        <div class="simon-btn" style="background:red; opacity:0.4; border:2px solid black;" onclick="handleSimon(0)"></div>
-        <div class="simon-btn" style="background:blue; opacity:0.4; border:2px solid black;" onclick="handleSimon(1)"></div>
-        <div class="simon-btn" style="background:lime; opacity:0.4; border:2px solid black;" onclick="handleSimon(2)"></div>
-        <div class="simon-btn" style="background:yellow; opacity:0.4; border:2px solid black;" onclick="handleSimon(3)"></div>
-    </div><h2 id="simon-msg" style="position:absolute; top:40%; width:100%; text-align:center; text-shadow:2px 2px #000; pointer-events:none;"></h2>`;
+    gameStage.innerHTML = `
+        <div class="simon-grid">
+            <div class="simon-btn" style="background:#e74c3c; color:#e74c3c;" onclick="clkSimon(0)"></div>
+            <div class="simon-btn" style="background:#3498db; color:#3498db;" onclick="clkSimon(1)"></div>
+            <div class="simon-btn" style="background:#2ecc71; color:#2ecc71;" onclick="clkSimon(2)"></div>
+            <div class="simon-btn" style="background:#f1c40f; color:#f1c40f;" onclick="clkSimon(3)"></div>
+        </div>
+        <div id="simon-msg" style="position:absolute; top:50%; width:100%; text-align:center; font-size:2em; font-weight:bold; pointer-events:none; text-shadow:2px 2px #000;"></div>
+    `;
+    
+    simonSeq = [];
     setTimeout(playRound, 1000);
 }
+
 function playRound() {
-    if(!gameActive) return;
-    simonStep = 0; canClick = false;
+    if (!gameActive) return;
+    simonStep = 0;
+    canClick = false;
     document.getElementById('simon-msg').innerText = "Memorizza!";
+    
     simonSeq.push(Math.floor(Math.random() * 4));
+    
     let i = 0;
     let int = setInterval(() => {
-        if(i>=simonSeq.length) { clearInterval(int); canClick=true; document.getElementById('simon-msg').innerText="Tocca a te!"; return;}
-        flashBtn(simonSeq[i]); i++;
+        if (i >= simonSeq.length) {
+            clearInterval(int);
+            document.getElementById('simon-msg').innerText = "Tocca a te!";
+            canClick = true;
+            return;
+        }
+        flashBtn(simonSeq[i]);
+        i++;
     }, 800);
     gameIntervals.push(int);
 }
+
 function flashBtn(idx) {
-    let btns = gameStage.querySelectorAll('.simon-btn');
-    btns[idx].style.opacity = '1';
-    btns[idx].style.boxShadow = '0 0 20px white';
-    setTimeout(() => { btns[idx].style.opacity = '0.4'; btns[idx].style.boxShadow = 'none';}, 400);
+    const btns = document.querySelectorAll('.simon-btn');
+    btns[idx].classList.add('active-light');
+    setTimeout(() => btns[idx].classList.remove('active-light'), 400);
 }
-window.handleSimon = function(idx) {
-    if(!canClick || !gameActive) return;
+
+window.clkSimon = function(idx) {
+    if (!canClick || !gameActive) return;
     flashBtn(idx);
-    if(idx !== simonSeq[simonStep]) { lives=0; updateHUD(); gameOver(); return; }
-    simonStep++;
-    if(simonStep >= simonSeq.length) { score+=simonSeq.length*10; updateHUD(); canClick=false; setTimeout(playRound, 1000); }
-}
-
-/* --- 5. COSCIOTTO (FIXED) --- */
-function initCosciotto() {
-    gameStage.innerHTML = `<div id="basket"></div>`;
-    const basket = document.getElementById('basket');
     
-    // Funzione movimento unificata
-    function moveBasket(clientX) {
-        if(!gameActive) return;
-        let rect = gameStage.getBoundingClientRect();
-        let x = clientX - rect.left - 40; // 40 è metà larghezza cestino
-        // Limiti
-        if(x < 0) x = 0;
-        if(x > rect.width - 80) x = rect.width - 80;
-        basket.style.left = x + 'px';
+    if (idx !== simonSeq[simonStep]) {
+        lives = 0; gameOver(); return;
     }
+    
+    simonStep++;
+    if (simonStep >= simonSeq.length) {
+        score += simonSeq.length * 10;
+        updateHUD();
+        canClick = false;
+        document.getElementById('simon-msg').innerText = "Bravo!";
+        setTimeout(playRound, 1000);
+    }
+};
 
-    gameStage.onmousemove = (e) => moveBasket(e.clientX);
-    gameStage.ontouchmove = (e) => { e.preventDefault(); moveBasket(e.touches[0].clientX); };
-
-    let spawnInt = setInterval(() => {
-        let item = document.createElement('div');
-        item.className = 'falling-item';
-        let isBomb = Math.random() > 0.8;
-        item.innerText = isBomb ? '💣' : '🍗';
-        item.style.left = Math.random() * (gameStage.offsetWidth - 40) + 'px';
-        item.style.top = '0px';
-        gameStage.appendChild(item);
-        
-        let fall = setInterval(() => {
-            if(!gameActive) { clearInterval(fall); return; }
-            let top = parseFloat(item.style.top);
-            let stageH = gameStage.offsetHeight;
-
-            // Collisione
-            if(top > stageH - 70 && top < stageH - 10) {
-                let iRect = item.getBoundingClientRect();
-                let bRect = basket.getBoundingClientRect();
-                // Controllo sovrapposizione orizzontale
-                if(iRect.right > bRect.left + 10 && iRect.left < bRect.right - 10) {
-                    if(isBomb) { lives--; flash("red"); }
-                    else { score += 10; }
-                    updateHUD(); item.remove(); clearInterval(fall);
-                    if(lives<=0) gameOver();
-                    return;
-                }
-            }
-            
-            if(top > stageH) {
-                if(!isBomb) { lives--; updateHUD(); } // Cibo perso
-                item.remove(); clearInterval(fall);
-                if(lives<=0) gameOver();
-            } else {
-                item.style.top = (top + 4 + (score*0.01)) + 'px';
-            }
-        }, 20);
-        gameIntervals.push(fall);
-    }, 1000);
-    gameIntervals.push(spawnInt);
+/* --- UTILITIES & DB --- */
+function flashStage(color) {
+    gameStage.style.borderColor = color;
+    setTimeout(() => gameStage.style.borderColor = "#5d4037", 200);
 }
 
-/* --- SALVATAGGIO --- */
 function submitScore() {
     const name = document.getElementById('player-name').value;
-    if(!name) return alert("Inserisci nome!");
-    const btn = document.getElementById('btn-submit');
-    btn.innerText = "Incisione..."; btn.disabled = true;
-
-    fetch(SCRIPT_URL + `?action=save&name=${encodeURIComponent(name)}&score=${score}&game=${currentGame}`, {method: 'POST'})
-    .then(() => { alert("Salvato!"); resetGameUI(); btn.innerText = "INCIDI"; btn.disabled = false; })
-    .catch(() => { alert("Errore Taverna!"); btn.disabled = false; });
+    if (!name) return alert("Inserisci il tuo nome!");
+    
+    const btn = document.querySelector('#save-form button');
+    btn.innerText = "Salvataggio...";
+    btn.disabled = true;
+    
+    fetch(`${SCRIPT_URL}?action=save&name=${encodeURIComponent(name)}&score=${score}&game=${currentGame}`, {
+        method: 'POST'
+    })
+    .then(() => {
+        alert("Punteggio salvato!");
+        btn.innerText = "SALVA";
+        btn.disabled = false;
+        resetGame(); // Torna alla home del gioco
+    })
+    .catch(e => {
+        console.error(e);
+        alert("Errore di connessione.");
+        btn.disabled = false;
+    });
 }
 
-function loadLeaderboard(g) {
+function loadLeaderboard(game) {
     leaderboardList.innerHTML = "<li>Caricamento...</li>";
-    fetch(SCRIPT_URL + `?game=${g}`).then(r=>r.json()).then(d => {
-        leaderboardList.innerHTML = "";
-        d.forEach((r,i) => leaderboardList.innerHTML += `<li><span>#${i+1} ${r.name}</span><span>${r.score}</span></li>`);
-    });
+    fetch(`${SCRIPT_URL}?game=${game}`)
+        .then(res => res.json())
+        .then(data => {
+            leaderboardList.innerHTML = "";
+            if(data.length === 0) leaderboardList.innerHTML = "<li>Nessun record ancora!</li>";
+            data.forEach((row, i) => {
+                leaderboardList.innerHTML += `<li><span>#${i+1} ${row.name}</span><span>${row.score}</span></li>`;
+            });
+        });
 }
