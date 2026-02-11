@@ -1,6 +1,6 @@
 // --- CONFIGURAZIONE ---
 // LINK DATABASE AGGIORNATO (Versione con Chat, Report e Email Alert):
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwxRAA8WBajbhZi6apdFNBi2eIAoKdePtlRFKvl91dZSoVElGejSB4GhpvjqxWj8Lc9PA/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbykh3H-5PwiGaYAnr3Gu5EsmKC-WMkBnvy2SF9RJwFM9PqtCX2f9h7vLX4YGPgzXVJ7tg/exec";
 
 // --- VARIABILI GLOBALI DI GIOCO ---
 let currentGame = null;
