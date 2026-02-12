@@ -21,7 +21,7 @@
 
     <div class="page-title">
         <h2>🍺 La Taverna di Re Panza</h2>
-        <p>Solo per veri stomaci forti! Mettiti alla prova.</p>
+        <p>Sfida il tempo: hai solo 60 secondi!</p>
     </div>
 
     <div class="container glass-panel">
@@ -30,7 +30,7 @@
                 <div class="icon">🍗</div><h3>Acchiappa il Cosciotto</h3><div class="btn-fake">GIOCA</div>
             </div>
             <div class="game-card" onclick="openGame('ratti')">
-                <div class="icon">🐭</div><h3>Schiaccia il Ratto</h3><div class="btn-fake">GIOCA</div>
+                <div class="icon">🐭</div><h3>Ratti & Gatti</h3><div class="btn-fake">GIOCA</div>
             </div>
             <div class="game-card" onclick="openGame('freccette')">
                 <div class="icon">🎯</div><h3>Freccette Ubriache</h3><div class="btn-fake">GIOCA</div>
@@ -85,6 +85,9 @@
             <div class="game-header-modal">
                 <h2 id="modal-title">GIOCO</h2>
                 <div class="hud">
+                    <span style="border:1px solid var(--gold); padding:2px 8px; border-radius:10px; color:var(--gold);">
+                        ⏳ <b id="game-timer">60</b>s
+                    </span>
                     <span>Punti: <b id="global-score">0</b></span>
                     <span>Vite: <b id="global-lives">❤️❤️❤️</b></span>
                 </div>
@@ -95,11 +98,11 @@
             <div id="game-instructions" class="overlay-panel">
                 <h3>📜 Istruzioni</h3>
                 <p id="instruction-text">...</p>
-                <button onclick="startGameLogic()" class="btn-action">INIZIA!</button>
+                <button onclick="startGameLogic()" class="btn-action">INIZIA (60s)</button>
             </div>
 
             <div id="save-form" class="overlay-panel hidden">
-                <h3>☠️ PARTITA FINITA!</h3>
+                <h3 id="end-reason">☠️ PARTITA FINITA!</h3>
                 <p>Punteggio: <b id="final-score-display">0</b></p>
                 <input type="text" id="player-name" placeholder="Il tuo nome..." maxlength="12">
                 <button onclick="submitScore()" id="btn-save" class="btn-action">INCIDI RECORD</button>
@@ -113,10 +116,10 @@
         </div>
     </div>
 
-    <script src="common.js"></script> <script src="script.js"></script>
+    <script src="common.js"></script>
+    <script src="script.js"></script>
 
     <script>
-        // Logica AI (se non coperta da common.js)
         function toggleAI() {
             const w = document.getElementById('ai-window');
             w.style.display = (w.style.display === 'block') ? 'none' : 'block';
