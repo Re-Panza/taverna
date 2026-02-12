@@ -15,8 +15,8 @@ window.onload = () => {
     loadChat();     // Carica i messaggi istantaneamente all'apertura
 };
 
-// Aggiornamento ultra-rapido ogni secondo per una chat fluida
-setInterval(loadChat, 1000); 
+// Aggiornamento ogni 4 secondi (meno stressante per il browser)
+setInterval(loadChat, 4000); 
 
 // --- SISTEMA ID & CHAT ---
 function getDeviceUID() {
@@ -27,8 +27,10 @@ function getDeviceUID() {
     }
     const savedName = localStorage.getItem('tavern_name');
     if(savedName) {
-        if(document.getElementById('player-name')) document.getElementById('player-name').value = savedName;
-        if(document.getElementById('chat-user-name')) document.getElementById('chat-user-name').value = savedName;
+        const nameInput = document.getElementById('player-name');
+        const chatNameInput = document.getElementById('chat-user-name');
+        if(nameInput) nameInput.value = savedName;
+        if(chatNameInput) chatNameInput.value = savedName;
     }
     return uid;
 }
@@ -53,14 +55,12 @@ function loadChat() {
     .then(r=>r.json())
     .then(data => {
         let html = "";
-        if(data.length === 0) { 
+        if(!data || data.length === 0) { 
             html = "<div style='color:#777; padding:5px; text-align:center;'>La locanda è silenziosa...</div>"; 
         } else {
             data.forEach(m => {
                 let d = new Date(m.time);
                 let timeStr = d.getHours().toString().padStart(2,'0') + ":" + d.getMinutes().toString().padStart(2,'0');
-                
-                // Colore speciale per il Re
                 let nameStyle = m.name.toLowerCase().includes("re panza") ? "color:var(--gold); font-weight:bold;" : "color:var(--accent);";
 
                 html += `<div class="chat-msg">
@@ -69,15 +69,13 @@ function loadChat() {
                                 <span class="chat-name" style="${nameStyle}">${m.name}:</span> 
                                 <span class="chat-text">${m.msg}</span>
                             </div>
-                            <button class="btn-report" onclick="reportMsg('${m.time}')" title="Segnala al Re">🚩</button>
+                            <button class="btn-report" onclick="reportMsg('${m.time}')" title="Segnala">🚩</button>
                          </div>`;
             });
         }
         
-        // Aggiorna solo se il contenuto è cambiato per evitare sfarfallio
-        if(box.dataset.lastContent !== html) { 
+        if(box.innerHTML !== html) { 
             box.innerHTML = html; 
-            box.dataset.lastContent = html;
             box.scrollTop = box.scrollHeight;
         }
     })
@@ -105,11 +103,15 @@ const RULES = {
 function openGame(gameName) {
     currentGame = gameName;
     score = 0; lives = 3;
-    modal.style.display = 'flex';
-    gameStage.innerHTML = '';
-    saveForm.classList.add('hidden');
-    instructionsPanel.classList.remove('hidden');
-    instructionsText.innerHTML = RULES[gameName] || "Gioca!";
+    
+    // FIX: Uso document.getElementById per trovare gli elementi corretti
+    document.getElementById('gameModal').style.display = 'flex';
+    document.getElementById('game-stage').innerHTML = '';
+    
+    document.getElementById('save-form').classList.add('hidden');
+    document.getElementById('game-instructions').classList.remove('hidden');
+    
+    document.getElementById('instruction-text').innerHTML = RULES[gameName] || "Gioca!";
     document.getElementById('modal-title').innerText = gameName.toUpperCase();
     
     const lbTitle = document.getElementById('lb-game-name');
@@ -121,7 +123,7 @@ function openGame(gameName) {
 }
 
 function startGameLogic() {
-    instructionsPanel.classList.add('hidden');
+    document.getElementById('game-instructions').classList.add('hidden');
     gameActive = true;
     setTimeout(() => {
         if (currentGame === 'cosciotto') initCosciotto();
@@ -134,22 +136,23 @@ function startGameLogic() {
 
 function closeGame() {
     stopAllGames();
-    modal.style.display = 'none';
+    document.getElementById('gameModal').style.display = 'none';
 }
 
 function stopAllGames() {
     gameActive = false;
     gameIntervals.forEach(clearInterval);
     gameIntervals = [];
-    gameStage.onclick = null;
-    gameStage.onmousemove = null;
-    gameStage.ontouchmove = null;
-    gameStage.onpointerdown = null;
+    const stage = document.getElementById('game-stage');
+    stage.onclick = null;
+    stage.onmousemove = null;
+    stage.ontouchmove = null;
+    stage.onpointerdown = null;
 }
 
 function updateHUD() {
-    scoreDisplay.innerText = score;
-    livesDisplay.innerText = "❤️".repeat(Math.max(0, lives));
+    document.getElementById('global-score').innerText = score;
+    document.getElementById('global-lives').innerText = "❤️".repeat(Math.max(0, lives));
 }
 
 function gameOver() {
@@ -157,51 +160,56 @@ function gameOver() {
     gameActive = false;
     stopAllGames();
     if(navigator.vibrate) navigator.vibrate(200);
-    saveForm.classList.remove('hidden');
+    document.getElementById('save-form').classList.remove('hidden');
     document.getElementById('final-score-display').innerText = score;
 }
 
 function resetGame() {
     stopAllGames();
-    gameStage.innerHTML = '';
-    saveForm.classList.add('hidden');
+    document.getElementById('game-stage').innerHTML = '';
+    document.getElementById('save-form').classList.add('hidden');
     setTimeout(startGameLogic, 100);
 }
 
 function flashStage(color) {
-    gameStage.style.borderColor = color;
-    setTimeout(() => gameStage.style.borderColor = "rgba(255,255,255,0.1)", 200);
+    const stage = document.getElementById('game-stage');
+    stage.style.borderColor = color;
+    setTimeout(() => stage.style.borderColor = "rgba(255,255,255,0.1)", 200);
 }
 
-// --- LOGICA GIOCHI (VERSIONI OTTIMIZZATE) ---
+// --- LOGICA GIOCHI ---
 
 function initCosciotto() {
-    gameStage.innerHTML = `<div id="basket">🧺</div>`;
+    const stage = document.getElementById('game-stage');
+    stage.innerHTML = `<div id="basket">🧺</div>`;
     const basket = document.getElementById('basket');
-    const stageW = gameStage.offsetWidth;
-    basket.style.left = (stageW / 2 - 40) + 'px';
+    
     function move(xInput) {
         if (!gameActive) return;
-        const rect = gameStage.getBoundingClientRect();
+        const rect = stage.getBoundingClientRect();
         let x = xInput - rect.left - 40;
         if (x < 0) x = 0; if (x > rect.width - 80) x = rect.width - 80;
         basket.style.left = x + 'px';
     }
-    gameStage.ontouchmove = (e) => { e.preventDefault(); move(e.touches[0].clientX); };
-    gameStage.onmousemove = (e) => move(e.clientX);
+    
+    stage.ontouchmove = (e) => { e.preventDefault(); move(e.touches[0].clientX); };
+    stage.onmousemove = (e) => move(e.clientX);
+    
     let spawner = setInterval(() => {
         const item = document.createElement('div');
         item.className = 'falling-item';
         const isBomb = Math.random() > 0.8;
         item.innerText = isBomb ? '💣' : '🍗';
-        item.style.left = Math.random() * (gameStage.offsetWidth - 50) + 'px';
+        item.style.left = Math.random() * (stage.offsetWidth - 50) + 'px';
         item.style.top = '-50px';
-        gameStage.appendChild(item);
+        stage.appendChild(item);
+        
         let speed = 4 + (score * 0.05);
         let fall = setInterval(() => {
             if (!gameActive) { clearInterval(fall); item.remove(); return; }
             let top = parseFloat(item.style.top);
-            let stageH = gameStage.offsetHeight; 
+            let stageH = stage.offsetHeight; 
+            
             if (top > stageH - 90 && top < stageH - 10) {
                 const iR = item.getBoundingClientRect();
                 const bR = basket.getBoundingClientRect();
@@ -223,18 +231,23 @@ function initCosciotto() {
 }
 
 function initRatti() {
+    const stage = document.getElementById('game-stage');
     let html = '<div class="grid-ratti">';
     for(let i=0; i<9; i++) html += `<div class="hole" onpointerdown="missRat(event)"><div class="mole" onpointerdown="whack(event, this)">🐭</div></div>`;
     html += '</div>';
-    gameStage.innerHTML = html;
+    stage.innerHTML = html;
+    
     function peep() {
         if (!gameActive) return;
         const moles = document.querySelectorAll('.mole');
         if(moles.length === 0) return;
         const mole = moles[Math.floor(Math.random() * moles.length)];
         if (mole.classList.contains('up')) { setTimeout(peep, 100); return; }
-        mole.innerText = "🐭"; mole.classList.add('up');
+        
+        mole.innerText = "🐭"; 
+        mole.classList.add('up');
         let time = Math.max(500, 1200 - (score * 10));
+        
         setTimeout(() => {
             mole.classList.remove('up');
             if (gameActive) setTimeout(peep, Math.random()*500 + 300);
@@ -259,9 +272,11 @@ window.missRat = function(e) {
 }
 
 function initFreccette() {
-    gameStage.innerHTML = `<div class="center-mark"></div><div id="dart-target"></div><button onpointerdown="throwDart()" class="btn-action" style="position:absolute; bottom:20px; left:50%; transform:translateX(-50%); width:100px; z-index:200;">TIRA!</button>`;
+    const stage = document.getElementById('game-stage');
+    stage.innerHTML = `<div class="center-mark"></div><div id="dart-target"></div><button onpointerdown="throwDart()" class="btn-action" style="position:absolute; bottom:20px; left:50%; transform:translateX(-50%); width:100px; z-index:200;">TIRA!</button>`;
     const target = document.getElementById('dart-target');
     let angle = 0;
+    
     let loop = setInterval(() => {
         angle += 0.04 + (score * 0.0001);
         let r = 100;
@@ -285,27 +300,34 @@ window.throwDart = function() {
 };
 
 function initBarili() {
-    gameStage.innerHTML = `<div id="tower-world"><div id="moving-block"></div></div>`;
+    const stage = document.getElementById('game-stage');
+    stage.innerHTML = `<div id="tower-world"><div id="moving-block"></div></div>`;
     const world = document.getElementById('tower-world');
     const mover = document.getElementById('moving-block');
+    
     let level=0, w=200, pos=0, dir=1, speed=3, h=30;
-    let stageW = gameStage.offsetWidth; if(stageW===0) stageW=350; 
+    let stageW = stage.offsetWidth; if(stageW===0) stageW=350; 
+    
     mover.style.width=w+'px'; mover.style.bottom='0px';
+    
     let loop = setInterval(() => {
         pos += speed * dir;
         if (pos > stageW - w || pos < 0) dir *= -1;
         mover.style.left = pos + 'px';
     }, 16);
     gameIntervals.push(loop);
-    gameStage.onpointerdown = function(e) {
+    
+    stage.onpointerdown = function(e) {
         if(e.target.tagName === 'BUTTON') return;
         if(!gameActive) return;
         let prevLeft = (stageW - 200)/2;
         let prevWidth = 200;
+        
         if (level > 0) {
             const pb = document.getElementById(`barile-${level-1}`);
             if(pb) { prevLeft = parseFloat(pb.style.left); prevWidth = parseFloat(pb.style.width); }
         }
+        
         let overlap = w;
         let newLeft = pos;
         if (level > 0) {
@@ -314,22 +336,27 @@ function initBarili() {
             overlap = oR - oL;
             newLeft = oL;
         }
+        
         if (overlap <= 0) { lives=0; gameOver(); return; }
+        
         const b = document.createElement('div');
         b.className='barile'; b.id=`barile-${level}`;
         b.style.width=overlap+'px'; b.style.left=newLeft+'px';
         b.style.bottom=(level*h)+'px';
         world.appendChild(b);
+        
         score+=10; level++; w=overlap; speed+=0.5;
         mover.style.width=w+'px'; mover.style.bottom=(level*h)+'px'; pos=0;
-        if (level*h > gameStage.offsetHeight/2) {
-            world.style.transform = `translateY(${ (level*h) - (gameStage.offsetHeight/2) }px)`;
+        
+        if (level*h > stage.offsetHeight/2) {
+            world.style.transform = `translateY(${ (level*h) - (stage.offsetHeight/2) }px)`;
         }
     };
 }
 
 function initSimon() {
-    gameStage.innerHTML = `<div class="simon-grid">
+    const stage = document.getElementById('game-stage');
+    stage.innerHTML = `<div class="simon-grid">
         <div class="simon-btn" style="background:red" onpointerdown="clkS(0)"></div>
         <div class="simon-btn" style="background:blue" onpointerdown="clkS(1)"></div>
         <div class="simon-btn" style="background:lime" onpointerdown="clkS(2)"></div>
@@ -374,23 +401,25 @@ function submitScore() {
     const uid = getDeviceUID();
     const btn = document.getElementById('btn-save');
     btn.innerText = "Salvataggio..."; btn.disabled = true;
+    
     fetch(`${SCRIPT_URL}?action=save&name=${encodeURIComponent(name)}&score=${score}&game=${currentGame}&uid=${uid}`, {method:'POST'})
     .then(()=>{ 
         alert("Record salvato!"); 
         btn.innerText="INCIDI RECORD"; 
         btn.disabled=false; 
-        saveForm.classList.add('hidden');
+        document.getElementById('save-form').classList.add('hidden');
         loadLeaderboard(currentGame);
-        instructionsPanel.classList.remove('hidden');
+        document.getElementById('game-instructions').classList.remove('hidden');
     })
     .catch(()=>{ alert("Errore di connessione"); btn.disabled=false; });
 }
 
 function loadLeaderboard(g) {
-    leaderboardList.innerHTML = "<li>Caricamento...</li>";
+    const list = document.getElementById('leaderboard-list');
+    list.innerHTML = "<li>Caricamento...</li>";
     fetch(`${SCRIPT_URL}?game=${g}`).then(r=>r.json()).then(d=>{
-        leaderboardList.innerHTML="";
-        if(!d.length) leaderboardList.innerHTML="<li>Nessun record! Sii il primo!</li>";
-        d.forEach((r,i)=> leaderboardList.innerHTML += `<li><span>#${i+1} ${r.name}</span><span>${r.score}</span></li>`);
-    }).catch(()=>leaderboardList.innerHTML="<li>Errore caricamento</li>");
+        list.innerHTML="";
+        if(!d.length) list.innerHTML="<li>Nessun record! Sii il primo!</li>";
+        d.forEach((r,i)=> list.innerHTML += `<li><span>#${i+1} ${r.name}</span><span>${r.score}</span></li>`);
+    }).catch(()=>list.innerHTML="<li>Errore caricamento</li>");
 }
