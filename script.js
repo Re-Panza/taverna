@@ -11,10 +11,10 @@ let gameIntervals = [];
 
 // --- AVVIO ---
 window.onload = () => {
-    getDeviceUID(); 
-    loadChat();     
+    getDeviceUID();
+    loadChat();
 };
-setInterval(loadChat, 3000); 
+setInterval(loadChat, 3000);
 
 // --- UTILITY ---
 function getDeviceUID() {
@@ -24,9 +24,9 @@ function getDeviceUID() {
         localStorage.setItem('tavern_uid', uid);
     }
     const savedName = localStorage.getItem('tavern_name');
-    if(savedName) {
-        if(document.getElementById('player-name')) document.getElementById('player-name').value = savedName;
-        if(document.getElementById('chat-user-name')) document.getElementById('chat-user-name').value = savedName;
+    if (savedName) {
+        if (document.getElementById('player-name')) document.getElementById('player-name').value = savedName;
+        if (document.getElementById('chat-user-name')) document.getElementById('chat-user-name').value = savedName;
     }
     return uid;
 }
@@ -35,23 +35,23 @@ function getDeviceUID() {
 function sendChat() {
     const name = document.getElementById('chat-user-name').value || "Anonimo";
     const msg = document.getElementById('chat-message').value;
-    if(!msg) return;
-    document.getElementById('chat-message').value = ""; 
-    localStorage.setItem('tavern_name', name); 
-    fetch(`${SCRIPT_URL}?action=chat_send&name=${encodeURIComponent(name)}&msg=${encodeURIComponent(msg)}&uid=${getDeviceUID()}`, {method:'POST'})
-    .then(()=> loadChat());
+    if (!msg) return;
+    document.getElementById('chat-message').value = "";
+    localStorage.setItem('tavern_name', name);
+    fetch(`${SCRIPT_URL}?action=chat_send&name=${encodeURIComponent(name)}&msg=${encodeURIComponent(msg)}&uid=${getDeviceUID()}`, { method: 'POST' })
+        .then(() => loadChat());
 }
 
 function loadChat() {
     const box = document.getElementById('tavern-chat-box');
-    if(!box) return; 
-    fetch(`${SCRIPT_URL}?action=chat_get`).then(r=>r.json()).then(data => {
+    if (!box) return;
+    fetch(`${SCRIPT_URL}?action=chat_get`).then(r => r.json()).then(data => {
         let html = "";
-        if(!data || data.length === 0) { html = "<div style='color:#ccc; padding:10px; font-size:12px; text-align:center;'>Nessun messaggio.</div>"; }
+        if (!data || data.length === 0) { html = "<div style='color:#ccc; padding:10px; font-size:12px; text-align:center;'>Nessun messaggio.</div>"; }
         else {
             data.forEach(m => {
                 let d = new Date(m.time);
-                let timeStr = d.getHours().toString().padStart(2,'0') + ":" + d.getMinutes().toString().padStart(2,'0');
+                let timeStr = d.getHours().toString().padStart(2, '0') + ":" + d.getMinutes().toString().padStart(2, '0');
                 let nameStyle = m.name.toLowerCase().includes("re panza") ? "color:var(--gold);" : "color:var(--accent);";
                 // STRUTTURA HTML PER IL CSS (BANDIERINA ROSSA)
                 html += `
@@ -67,16 +67,16 @@ function loadChat() {
                 </div>`;
             });
         }
-        if(box.dataset.last !== JSON.stringify(data)) { 
-            box.innerHTML = html; 
+        if (box.dataset.last !== JSON.stringify(data)) {
+            box.innerHTML = html;
             box.dataset.last = JSON.stringify(data);
             box.scrollTop = box.scrollHeight;
         }
-    }).catch(() => {});
+    }).catch(() => { });
 }
 
-window.reportMsg = function(timeId) {
-    if(!confirm("Segnalare questo messaggio?")) return;
+window.reportMsg = function (timeId) {
+    if (!confirm("Segnalare questo messaggio?")) return;
     fetch(`${SCRIPT_URL}?action=chat_report&time=${encodeURIComponent(timeId)}`);
     alert("Segnalato!");
 };
@@ -93,17 +93,17 @@ const RULES = {
 function openGame(gameName) {
     currentGame = gameName;
     score = 0; lives = 3; timeLeft = 60; // RESET TIMER
-    
+
     document.getElementById('gameModal').style.display = 'flex';
     document.getElementById('game-stage').innerHTML = '';
     document.getElementById('save-form').classList.add('hidden');
     document.getElementById('game-instructions').classList.remove('hidden');
-    
+
     document.getElementById('instruction-text').innerHTML = RULES[gameName];
     document.getElementById('modal-title').innerText = gameName.toUpperCase();
     document.getElementById('lb-game-name').innerText = gameName.toUpperCase();
     document.getElementById('end-reason').innerText = "☠️ PARTITA FINITA!";
-    
+
     updateHUD();
     loadLeaderboard(gameName);
 }
@@ -111,13 +111,13 @@ function openGame(gameName) {
 function startGameLogic() {
     document.getElementById('game-instructions').classList.add('hidden');
     gameActive = true;
-    
+
     // TIMER GLOBALE - FIX
     let timerInt = setInterval(() => {
-        if(!gameActive) { clearInterval(timerInt); return; }
+        if (!gameActive) { clearInterval(timerInt); return; }
         timeLeft--;
         updateHUD();
-        if(timeLeft <= 0) {
+        if (timeLeft <= 0) {
             document.getElementById('end-reason').innerText = "⏳ TEMPO SCADUTO!";
             gameOver();
         }
@@ -152,7 +152,7 @@ function gameOver() {
     if (!gameActive) return;
     gameActive = false;
     stopAllGames();
-    if(navigator.vibrate) navigator.vibrate(200);
+    if (navigator.vibrate) navigator.vibrate(200);
     document.getElementById('save-form').classList.remove('hidden');
     document.getElementById('final-score-display').innerText = score;
 }
@@ -175,23 +175,23 @@ function initCosciotto() {
     const stage = document.getElementById('game-stage');
     stage.innerHTML = `<div id="basket">🧺</div>`;
     const basket = document.getElementById('basket');
-    
+
     // Funzione movimento corretta
     function move(clientX) {
         if (!gameActive) return;
         const rect = stage.getBoundingClientRect();
         let x = clientX - rect.left; // Posizione relativa al box
-        
+
         // Limiti (il transform -50% nel CSS gestisce la centratura visiva)
         if (x < 0) x = 0;
         if (x > rect.width) x = rect.width;
-        
+
         basket.style.left = x + 'px';
     }
 
     stage.ontouchmove = (e) => { e.preventDefault(); move(e.touches[0].clientX); };
     stage.onmousemove = (e) => move(e.clientX);
-    
+
     let spawner = setInterval(() => {
         const item = document.createElement('div');
         item.className = 'falling-item';
@@ -200,13 +200,13 @@ function initCosciotto() {
         item.style.left = Math.random() * (stage.offsetWidth - 40) + 'px';
         item.style.top = '-50px';
         stage.appendChild(item);
-        
+
         let speed = 4 + (score * 0.05);
         let fall = setInterval(() => {
             if (!gameActive) { clearInterval(fall); item.remove(); return; }
             let top = parseFloat(item.style.top);
             let stageH = stage.offsetHeight;
-            
+
             // Collisione
             if (top > stageH - 80 && top < stageH - 10) {
                 const iR = item.getBoundingClientRect();
@@ -233,25 +233,25 @@ function initCosciotto() {
 function initRatti() {
     const stage = document.getElementById('game-stage');
     let html = '<div class="grid-ratti">';
-    for(let i=0; i<9; i++) {
+    for (let i = 0; i < 9; i++) {
         html += `<div class="hole" onpointerdown="missRat(event)">
                     <div class="mole" id="mole-${i}" onpointerdown="whack(event, this)"></div>
                  </div>`;
     }
     html += '</div>';
     stage.innerHTML = html;
-    
+
     function peep() {
         if (!gameActive) return;
-        
+
         const moles = document.querySelectorAll('.mole');
         const mole = moles[Math.floor(Math.random() * moles.length)];
-        
+
         if (mole.classList.contains('up')) { setTimeout(peep, 100); return; }
-        
+
         // GATTO o TOPO?
         const isCat = Math.random() < 0.3; // 30% Gatto
-        
+
         // Pulisci classi e imposta
         mole.className = 'mole'; // Reset classi
         if (isCat) {
@@ -261,13 +261,13 @@ function initRatti() {
             mole.innerText = "🐭";
             mole.dataset.type = "rat";
         }
-        
+
         mole.classList.add('up'); // Sali!
-        
+
         let stayTime = Math.max(450, 1000 - (score * 5));
-        
+
         setTimeout(() => {
-            if(!gameActive) return;
+            if (!gameActive) return;
             mole.classList.remove('up');
             setTimeout(peep, Math.random() * 400 + 200);
         }, stayTime);
@@ -275,10 +275,10 @@ function initRatti() {
     setTimeout(peep, 500);
 }
 
-window.whack = function(e, mole) {
+window.whack = function (e, mole) {
     e.stopPropagation();
     if (!mole.classList.contains('up') || !gameActive) return;
-    
+
     if (mole.dataset.type === "cat") {
         lives--; flashStage('#ef4444'); mole.innerText = "😾";
     } else {
@@ -288,7 +288,7 @@ window.whack = function(e, mole) {
     if (lives <= 0) gameOver();
 };
 
-window.missRat = function(e) {
+window.missRat = function (e) {
     if (!gameActive) return;
     lives--; flashStage('#ef4444'); updateHUD();
     if (lives <= 0) gameOver();
@@ -311,15 +311,15 @@ function initFreccette() {
     gameIntervals.push(loop);
 }
 
-window.throwDart = function() {
+window.throwDart = function () {
     if (!gameActive) return;
     const t = document.getElementById('dart-target');
-    const d = Math.sqrt(Math.pow(parseFloat(t.dataset.x||0),2) + Math.pow(parseFloat(t.dataset.y||0),2));
-    if (d < 15) { score+=50; flashStage('#34d399'); }
-    else if (d < 40) { score+=20; flashStage('#fbbf24'); }
-    else if (d < 70) { score+=5; flashStage('#60a5fa'); }
+    const d = getDist(parseFloat(t.dataset.x || 0), parseFloat(t.dataset.y || 0), 0, 0);
+    if (d < 15) { score += 50; flashStage('#34d399'); }
+    else if (d < 40) { score += 20; flashStage('#fbbf24'); }
+    else if (d < 70) { score += 5; flashStage('#60a5fa'); }
     else { lives--; flashStage('red'); }
-    updateHUD(); if(lives<=0) gameOver();
+    updateHUD(); if (lives <= 0) gameOver();
 };
 
 function initBarili() {
@@ -327,39 +327,39 @@ function initBarili() {
     stage.innerHTML = `<div id="tower-world"><div id="moving-block"></div></div>`;
     const world = document.getElementById('tower-world');
     const mover = document.getElementById('moving-block');
-    let level=0, w=150, pos=0, dir=1, speed=3, h=25;
-    let stageW = stage.offsetWidth; 
-    mover.style.width=w+'px'; mover.style.bottom='0px';
+    let level = 0, w = 150, pos = 0, dir = 1, speed = 3, h = 25;
+    let stageW = stage.offsetWidth;
+    mover.style.width = w + 'px'; mover.style.bottom = '0px';
     let loop = setInterval(() => {
         pos += speed * dir;
         if (pos > stageW - w || pos < 0) dir *= -1;
         mover.style.left = pos + 'px';
     }, 16);
     gameIntervals.push(loop);
-    stage.onpointerdown = function(e) {
-        if(e.target.tagName === 'BUTTON') return;
-        if(!gameActive) return;
-        let prevLeft = (stageW - 150)/2;
+    stage.onpointerdown = function (e) {
+        if (e.target.tagName === 'BUTTON') return;
+        if (!gameActive) return;
+        let prevLeft = (stageW - 150) / 2;
         let prevWidth = 150;
         if (level > 0) {
-            const pb = document.getElementById(`barile-${level-1}`);
-            if(pb) { prevLeft = parseFloat(pb.style.left); prevWidth = parseFloat(pb.style.width); }
+            const pb = document.getElementById(`barile-${level - 1}`);
+            if (pb) { prevLeft = parseFloat(pb.style.left); prevWidth = parseFloat(pb.style.width); }
         }
         let overlap = w, newLeft = pos;
         if (level > 0) {
             const oL = Math.max(pos, prevLeft);
-            const oR = Math.min(pos+w, prevLeft+prevWidth);
+            const oR = Math.min(pos + w, prevLeft + prevWidth);
             overlap = oR - oL; newLeft = oL;
         }
-        if (overlap <= 0) { lives=0; gameOver(); return; }
+        if (overlap <= 0) { lives = 0; gameOver(); return; }
         const b = document.createElement('div');
-        b.className='barile'; b.id=`barile-${level}`;
-        b.style.width=overlap+'px'; b.style.left=newLeft+'px';
-        b.style.bottom=(level*h)+'px';
+        b.className = 'barile'; b.id = `barile-${level}`;
+        b.style.width = overlap + 'px'; b.style.left = newLeft + 'px';
+        b.style.bottom = (level * h) + 'px';
         world.appendChild(b);
-        score+=10; level++; w=overlap; speed+=0.2;
-        mover.style.width=w+'px'; mover.style.bottom=(level*h)+'px'; 
-        if (level*h > stage.offsetHeight/2) world.style.transform = `translateY(${ (level*h) - (stage.offsetHeight/2) }px)`;
+        score += 10; level++; w = overlap; speed += 0.2;
+        mover.style.width = w + 'px'; mover.style.bottom = (level * h) + 'px';
+        if (level * h > stage.offsetHeight / 2) world.style.transform = `translateY(${(level * h) - (stage.offsetHeight / 2)}px)`;
     };
 }
 
@@ -371,62 +371,62 @@ function initSimon() {
         <div class="simon-btn" style="background:#34d399" onpointerdown="clkS(2)"></div>
         <div class="simon-btn" style="background:#fbbf24" onpointerdown="clkS(3)"></div>
     </div><div id="simon-msg" style="position:absolute; top:50%; width:100%; text-align:center; color:#fff; font-size:24px; font-weight:bold; pointer-events:none; text-shadow:0 0 10px #000;"></div>`;
-    sSeq=[]; setTimeout(playS, 1000);
+    sSeq = []; setTimeout(playS, 1000);
 }
 
-let sSeq=[], sStep=0, sClick=false;
+let sSeq = [], sStep = 0, sClick = false;
 function playS() {
     if (!gameActive) return;
-    sStep=0; sClick=false;
+    sStep = 0; sClick = false;
     document.getElementById('simon-msg').innerText = "Memorizza!";
-    sSeq.push(Math.floor(Math.random()*4));
-    let i=0;
-    let int = setInterval(()=>{
-        if(i>=sSeq.length) { clearInterval(int); document.getElementById('simon-msg').innerText="Tocca!"; sClick=true; return;}
+    sSeq.push(Math.floor(Math.random() * 4));
+    let i = 0;
+    let int = setInterval(() => {
+        if (i >= sSeq.length) { clearInterval(int); document.getElementById('simon-msg').innerText = "Tocca!"; sClick = true; return; }
         flashS(sSeq[i]); i++;
     }, 600);
     gameIntervals.push(int);
 }
 
 function flashS(idx) {
-    const b=document.querySelectorAll('.simon-btn');
-    if(!b[idx]) return;
+    const b = document.querySelectorAll('.simon-btn');
+    if (!b[idx]) return;
     b[idx].classList.add('active-light');
-    setTimeout(()=>b[idx].classList.remove('active-light'), 300);
+    setTimeout(() => b[idx].classList.remove('active-light'), 300);
 }
 
-window.clkS = function(idx) {
-    if(!sClick || !gameActive) return;
+window.clkS = function (idx) {
+    if (!sClick || !gameActive) return;
     flashS(idx);
-    if(idx!==sSeq[sStep]) { lives=0; gameOver(); return; }
+    if (idx !== sSeq[sStep]) { lives = 0; gameOver(); return; }
     sStep++;
-    if(sStep>=sSeq.length) { score+=sSeq.length*10; updateHUD(); sClick=false; setTimeout(playS, 1000); }
+    if (sStep >= sSeq.length) { score += sSeq.length * 10; updateHUD(); sClick = false; setTimeout(playS, 1000); }
 };
 
 // --- SALVATAGGIO ---
 function submitScore() {
     const name = document.getElementById('player-name').value;
-    if(!name) return alert("Inserisci nome");
+    if (!name) return alert("Inserisci nome");
     const uid = getDeviceUID();
     const btn = document.getElementById('btn-save');
     btn.innerText = "Salvataggio..."; btn.disabled = true;
-    fetch(`${SCRIPT_URL}?action=save&name=${encodeURIComponent(name)}&score=${score}&game=${currentGame}&uid=${uid}`, {method:'POST'})
-    .then(()=>{ 
-        alert("Record salvato!"); 
-        btn.innerText="INCIDI RECORD"; btn.disabled=false; 
-        document.getElementById('save-form').classList.add('hidden'); 
-        loadLeaderboard(currentGame); 
-        document.getElementById('game-instructions').classList.remove('hidden'); 
-    })
-    .catch(()=>{ alert("Errore connessione"); btn.disabled=false; });
+    fetch(`${SCRIPT_URL}?action=save&name=${encodeURIComponent(name)}&score=${score}&game=${currentGame}&uid=${uid}`, { method: 'POST' })
+        .then(() => {
+            alert("Record salvato!");
+            btn.innerText = "INCIDI RECORD"; btn.disabled = false;
+            document.getElementById('save-form').classList.add('hidden');
+            loadLeaderboard(currentGame);
+            document.getElementById('game-instructions').classList.remove('hidden');
+        })
+        .catch(() => { alert("Errore connessione"); btn.disabled = false; });
 }
 
 function loadLeaderboard(g) {
     const list = document.getElementById('leaderboard-list');
     list.innerHTML = "<li>Caricamento...</li>";
-    fetch(`${SCRIPT_URL}?game=${g}`).then(r=>r.json()).then(d=>{
-        list.innerHTML="";
-        if(!d.length) list.innerHTML="<li>Nessun record! Sii il primo!</li>";
-        d.forEach((r,i)=> list.innerHTML += `<li>#${i+1} ${r.name} - ${r.score}</li>`);
-    }).catch(()=>list.innerHTML="<li>Errore caricamento</li>");
+    fetch(`${SCRIPT_URL}?game=${g}`).then(r => r.json()).then(d => {
+        list.innerHTML = "";
+        if (!d.length) list.innerHTML = "<li>Nessun record! Sii il primo!</li>";
+        d.forEach((r, i) => list.innerHTML += `<li>#${i + 1} ${r.name} - ${r.score}</li>`);
+    }).catch(() => list.innerHTML = "<li>Errore caricamento</li>");
 }
