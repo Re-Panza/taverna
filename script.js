@@ -14,9 +14,10 @@ window.onload = () => {
     getDeviceUID(); 
     loadChat();     
 };
+
 setInterval(loadChat, 4000); 
 
-// --- ID & CHAT ---
+// --- SISTEMA ID & CHAT ---
 function getDeviceUID() {
     let uid = localStorage.getItem('tavern_uid');
     if (!uid) {
@@ -35,8 +36,10 @@ function sendChat() {
     const name = document.getElementById('chat-user-name').value || "Anonimo";
     const msg = document.getElementById('chat-message').value;
     if(!msg) return;
+    
     document.getElementById('chat-message').value = ""; 
     localStorage.setItem('tavern_name', name); 
+    
     fetch(`${SCRIPT_URL}?action=chat_send&name=${encodeURIComponent(name)}&msg=${encodeURIComponent(msg)}&uid=${getDeviceUID()}`, {method:'POST'})
     .then(()=> loadChat());
 }
@@ -44,10 +47,14 @@ function sendChat() {
 function loadChat() {
     const box = document.getElementById('tavern-chat-box');
     if(!box) return; 
-    fetch(`${SCRIPT_URL}?action=chat_get`).then(r=>r.json()).then(data => {
+    
+    fetch(`${SCRIPT_URL}?action=chat_get`)
+    .then(r=>r.json())
+    .then(data => {
         let html = "";
-        if(!data || data.length === 0) html = "<div style='color:#ccc; padding:10px; font-size:12px;'>Silenzio...</div>"; 
-        else {
+        if(!data || data.length === 0) { 
+            html = "<div style='color:#ccc; padding:10px; font-size:12px;'>Nessun messaggio.</div>"; 
+        } else {
             data.forEach(m => {
                 let d = new Date(m.time);
                 let timeStr = d.getHours().toString().padStart(2,'0') + ":" + d.getMinutes().toString().padStart(2,'0');
@@ -59,8 +66,12 @@ function loadChat() {
                          </div>`;
             });
         }
-        if(box.innerHTML !== html) { box.innerHTML = html; box.scrollTop = box.scrollHeight; }
-    }).catch(() => {});
+        if(box.innerHTML !== html) { 
+            box.innerHTML = html; 
+            box.scrollTop = box.scrollHeight;
+        }
+    })
+    .catch(() => {});
 }
 
 // --- GESTIONE GIOCHI ---
@@ -94,11 +105,14 @@ function startGameLogic() {
     document.getElementById('game-instructions').classList.add('hidden');
     gameActive = true;
     
-    // TIMER GLOBALE 60 SECONDI
+    // --- CORREZIONE TIMER ---
+    // Il timer ora aggiorna l'HUD ogni secondo
     let timerInt = setInterval(() => {
         if(!gameActive) { clearInterval(timerInt); return; }
+        
         timeLeft--;
-        updateHUD();
+        updateHUD(); // IMPORTANTE: Aggiorna la grafica!
+        
         if(timeLeft <= 0) {
             document.getElementById('end-reason').innerText = "⏳ TEMPO SCADUTO!";
             gameOver();
@@ -127,9 +141,13 @@ function closeGame() {
 function updateHUD() {
     document.getElementById('global-score').innerText = score;
     document.getElementById('global-lives').innerText = "❤️".repeat(Math.max(0, lives));
+    
     const timerEl = document.getElementById('game-timer');
-    timerEl.innerText = timeLeft;
-    timerEl.parentElement.style.borderColor = timeLeft <= 10 ? "#ef4444" : "var(--gold)";
+    if(timerEl) {
+        timerEl.innerText = timeLeft;
+        // Effetto visivo se mancano meno di 10 secondi
+        timerEl.style.color = timeLeft <= 10 ? "#ef4444" : "#fbbf24";
+    }
 }
 
 function gameOver() {
@@ -154,12 +172,104 @@ function flashStage(color) {
     setTimeout(() => stage.style.boxShadow = "none", 200);
 }
 
-// --- GIOCO 1: COSCIOTTO ---
+// --- GIOCO RATTI & GATTI (CORRETTO) ---
+function initRatti() {
+    const stage = document.getElementById('game-stage');
+    let html = '<div class="grid-ratti">';
+    // Creiamo 9 buchi
+    for(let i=0; i<9; i++) {
+        html += `<div class="hole" onpointerdown="missRat(event)">
+                    <div class="mole" id="mole-${i}" onpointerdown="whack(event, this)"></div>
+                 </div>`;
+    }
+    html += '</div>';
+    stage.innerHTML = html;
+    
+    function peep() {
+        if (!gameActive) return;
+        
+        // Seleziona un buco a caso
+        const moles = document.querySelectorAll('.mole');
+        const randomIdx = Math.floor(Math.random() * moles.length);
+        const mole = moles[randomIdx];
+        
+        // Se è già su, riprova tra poco
+        if (mole.classList.contains('up')) { 
+            setTimeout(peep, 100); 
+            return; 
+        }
+        
+        // DECISIONE GATTO vs TOPO
+        const isCat = Math.random() < 0.3; // 30% probabilità gatto
+        
+        // Pulizia classi precedenti
+        mole.classList.remove('cat', 'rat');
+        
+        // Assegnazione valori
+        if (isCat) {
+            mole.innerText = "🐱";
+            mole.dataset.type = "cat";
+        } else {
+            mole.innerText = "🐭";
+            mole.dataset.type = "rat";
+        }
+        
+        // Animazione SU
+        mole.classList.add('up');
+        
+        // Tempo di permanenza (più veloce se hai punteggio alto)
+        let stayTime = Math.max(400, 1000 - (score * 5));
+        
+        setTimeout(() => {
+            if(!gameActive) return;
+            mole.classList.remove('up');
+            // Prossima talpa
+            setTimeout(peep, Math.random() * 400 + 200);
+        }, stayTime);
+    }
+    
+    // Primo avvio
+    setTimeout(peep, 500);
+}
+
+window.whack = function(e, mole) {
+    e.stopPropagation(); // Ferma il click sul buco
+    if (!mole.classList.contains('up') || !gameActive) return;
+    
+    if (mole.dataset.type === "cat") {
+        // HAI PRESO UN GATTO!
+        lives--;
+        flashStage('red');
+        mole.innerText = "😾"; // Faccia arrabbiata
+        if(navigator.vibrate) navigator.vibrate(200);
+    } else {
+        // HAI PRESO UN TOPO!
+        score += 10;
+        mole.innerText = "💥";
+        if(navigator.vibrate) navigator.vibrate(50);
+    }
+    
+    updateHUD();
+    mole.classList.remove('up');
+    
+    if (lives <= 0) gameOver();
+};
+
+window.missRat = function(e) {
+    if (!gameActive) return;
+    // Colpito il buco vuoto
+    lives--; 
+    flashStage('red'); 
+    updateHUD();
+    if (lives <= 0) gameOver();
+}
+
+// --- ALTRI GIOCHI (Standard) ---
+
 function initCosciotto() {
     const stage = document.getElementById('game-stage');
     stage.innerHTML = `<div id="basket">🧺</div>`;
     const basket = document.getElementById('basket');
-    
     function move(xInput) {
         if (!gameActive) return;
         const rect = stage.getBoundingClientRect();
@@ -169,7 +279,6 @@ function initCosciotto() {
     }
     stage.ontouchmove = (e) => { e.preventDefault(); move(e.touches[0].clientX); };
     stage.onmousemove = (e) => move(e.clientX);
-    
     let spawner = setInterval(() => {
         const item = document.createElement('div');
         item.className = 'falling-item';
@@ -178,7 +287,6 @@ function initCosciotto() {
         item.style.left = Math.random() * (stage.offsetWidth - 50) + 'px';
         item.style.top = '-50px';
         stage.appendChild(item);
-        
         let speed = 4 + (score * 0.05);
         let fall = setInterval(() => {
             if (!gameActive) { clearInterval(fall); item.remove(); return; }
@@ -203,56 +311,6 @@ function initCosciotto() {
     gameIntervals.push(spawner);
 }
 
-// --- GIOCO 2: RATTI & GATTI (UPDATED) ---
-function initRatti() {
-    const stage = document.getElementById('game-stage');
-    let html = '<div class="grid-ratti">';
-    for(let i=0; i<9; i++) html += `<div class="hole" onpointerdown="missRat(event)"><div class="mole" onpointerdown="whack(event, this)"></div></div>`;
-    html += '</div>';
-    stage.innerHTML = html;
-    
-    function peep() {
-        if (!gameActive) return;
-        const moles = document.querySelectorAll('.mole');
-        if(moles.length === 0) return;
-        const mole = moles[Math.floor(Math.random() * moles.length)];
-        if (mole.classList.contains('up')) { setTimeout(peep, 100); return; }
-        
-        // 30% GATTO, 70% TOPO
-        const isCat = Math.random() < 0.3;
-        mole.innerText = isCat ? "🐱" : "🐭";
-        mole.dataset.type = isCat ? "cat" : "rat";
-        mole.classList.add('up');
-        
-        let time = Math.max(400, 1000 - (score * 5));
-        setTimeout(() => {
-            mole.classList.remove('up');
-            if (gameActive) setTimeout(peep, Math.random() * 400 + 200);
-        }, time);
-    }
-    setTimeout(peep, 500);
-}
-
-window.whack = function(e, mole) {
-    e.stopPropagation();
-    if (!mole.classList.contains('up') || !gameActive) return;
-    
-    if (mole.dataset.type === "cat") {
-        lives--; flashStage('red'); mole.innerText = "😾";
-    } else {
-        score += 10; mole.innerText = "💥";
-    }
-    updateHUD(); mole.classList.remove('up');
-    if (lives <= 0) gameOver();
-};
-
-window.missRat = function(e) {
-    if (!gameActive) return;
-    lives--; flashStage('red'); updateHUD();
-    if (lives <= 0) gameOver();
-}
-
-// --- GIOCO 3: FRECCETTE ---
 function initFreccette() {
     const stage = document.getElementById('game-stage');
     stage.innerHTML = `<div class="center-mark"></div><div id="dart-target"></div><button onpointerdown="throwDart()" class="btn-action" style="position:absolute; bottom:20px; left:50%; transform:translateX(-50%); width:120px; z-index:200;">TIRA!</button>`;
@@ -280,7 +338,6 @@ window.throwDart = function() {
     updateHUD(); if(lives<=0) gameOver();
 };
 
-// --- GIOCO 4: BARILI ---
 function initBarili() {
     const stage = document.getElementById('game-stage');
     stage.innerHTML = `<div id="tower-world"><div id="moving-block"></div></div>`;
@@ -289,14 +346,12 @@ function initBarili() {
     let level=0, w=150, pos=0, dir=1, speed=3, h=25;
     let stageW = stage.offsetWidth; 
     mover.style.width=w+'px'; mover.style.bottom='0px';
-    
     let loop = setInterval(() => {
         pos += speed * dir;
         if (pos > stageW - w || pos < 0) dir *= -1;
         mover.style.left = pos + 'px';
     }, 16);
     gameIntervals.push(loop);
-    
     stage.onpointerdown = function(e) {
         if(e.target.tagName === 'BUTTON') return;
         if(!gameActive) return;
@@ -324,7 +379,6 @@ function initBarili() {
     };
 }
 
-// --- GIOCO 5: SIMON ---
 function initSimon() {
     const stage = document.getElementById('game-stage');
     stage.innerHTML = `<div class="simon-grid">
@@ -373,7 +427,13 @@ function submitScore() {
     const btn = document.getElementById('btn-save');
     btn.innerText = "Salvataggio..."; btn.disabled = true;
     fetch(`${SCRIPT_URL}?action=save&name=${encodeURIComponent(name)}&score=${score}&game=${currentGame}&uid=${uid}`, {method:'POST'})
-    .then(()=>{ alert("Record salvato!"); btn.innerText="INCIDI RECORD"; btn.disabled=false; document.getElementById('save-form').classList.add('hidden'); loadLeaderboard(currentGame); document.getElementById('game-instructions').classList.remove('hidden'); })
+    .then(()=>{ 
+        alert("Record salvato!"); 
+        btn.innerText="INCIDI RECORD"; btn.disabled=false; 
+        document.getElementById('save-form').classList.add('hidden'); 
+        loadLeaderboard(currentGame); 
+        document.getElementById('game-instructions').classList.remove('hidden'); 
+    })
     .catch(()=>{ alert("Errore connessione"); btn.disabled=false; });
 }
 
