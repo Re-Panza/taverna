@@ -128,10 +128,10 @@ input[type="text"] { width: 100%; padding: 12px; margin-bottom: 5px; border-radi
 /* AI & FOOTER */
 .paypal-footer { text-align: center; margin-top: 40px; padding: 30px 20px; border-top: 1px solid var(--border); }
 .paypal-link { text-decoration: none; font-weight: 700; font-size: 14px; background: #0070ba; color: #fff; padding: 12px 28px; border-radius: 50px; box-shadow: 0 4px 15px rgba(0, 112, 186, 0.3); }
-#ai-assistant-container { position: fixed; bottom: 20px; right: 20px; z-index: 9000; }
-#ai-button { width: 65px; height: 65px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.4); border: 2px solid var(--accent); overflow: hidden; }
+#ai-assistant-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; }
+#ai-button { width: 70px; height: 70px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.4); border: 2px solid var(--accent); overflow: hidden; }
 #ai-button img { width: 100%; height: 100%; object-fit: cover; }
-#ai-window { display: none; position: absolute; bottom: 80px; right: 0; width: 85vw; max-width: 320px; background: var(--card); border: 1px solid var(--accent); border-radius: 20px; padding: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); backdrop-filter: blur(10px); }
+#ai-window { display: none; position: absolute; bottom: 85px; right: 0; width: 85vw; max-width: 320px; background: var(--card); border: 1px solid var(--accent); border-radius: 20px; padding: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); backdrop-filter: blur(10px); }
 .user-msg { color: var(--accent); margin: 5px 0; font-size: 13px; }
 .bot-msg { color: #fff; margin: 5px 0; font-size: 13px; }
 .ai-header { color: var(--accent); font-weight: bold; margin-bottom: 10px; display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); }
