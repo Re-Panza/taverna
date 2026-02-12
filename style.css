@@ -34,7 +34,7 @@ body {
 .game-card h3 { font-family: 'MedievalSharp', cursive; color: var(--text); margin: 5px 0; font-size: 1.1em; }
 .btn-fake { background: var(--accent); color: #0f172a; padding: 6px; border-radius: 12px; font-weight: 800; font-size: 0.8em; margin-top: 10px; }
 
-/* --- CHAT AREA AGGIORNATA --- */
+/* --- CHAT AREA --- */
 .chat-header { 
     color: var(--gold); 
     font-family: 'MedievalSharp', cursive; 
@@ -56,8 +56,8 @@ body {
 }
 
 .chat-msg { 
-    display: flex; /* Flexbox per allineare */
-    justify-content: space-between; /* Spinge il contenuto ai lati opposti */
+    display: flex; 
+    justify-content: space-between; 
     align-items: flex-start;
     margin-bottom: 10px; 
     border-bottom: 1px solid rgba(255,255,255,0.05); 
@@ -66,7 +66,7 @@ body {
 
 .chat-content-wrapper {
     flex-grow: 1;
-    padding-right: 10px; /* Spazio prima della bandierina */
+    padding-right: 10px; 
 }
 
 .chat-name { 
@@ -89,21 +89,24 @@ body {
     margin-right: 5px;
 }
 
-/* --- BANDIERINA SEGNALAZIONE --- */
+/* --- BANDIERINA SEGNALAZIONE (CORRETTA) --- */
 .btn-report {
-    background: transparent; /* Niente sfondo bianco */
+    background: transparent; /* Sfondo trasparente */
     border: none;
     cursor: pointer;
-    font-size: 16px;
-    opacity: 0.3; /* Semitrasparente a riposo */
-    transition: opacity 0.2s, transform 0.2s;
-    padding: 0;
-    min-width: 24px;
+    font-size: 20px; /* Più grande */
+    color: #ef4444; /* ROSSO */
+    opacity: 0.7; /* Più visibile di default */
+    transition: all 0.2s ease;
+    padding: 0 0 0 10px;
+    line-height: 1;
+    filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));
 }
 
 .btn-report:hover {
-    opacity: 1; /* Visibile al passaggio */
-    transform: scale(1.2);
+    opacity: 1; 
+    transform: scale(1.2) rotate(10deg);
+    filter: drop-shadow(0 0 5px rgba(239, 68, 68, 0.6)); /* Alone rosso al passaggio */
 }
 
 .chat-input-area { display: flex; gap: 8px; }
