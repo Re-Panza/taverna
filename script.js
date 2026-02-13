@@ -8,6 +8,7 @@ let lives = 3;
 let timeLeft = 60;
 let gameActive = false;
 let gameIntervals = [];
+let lastDamageTime = 0; // FIX iOS: Previene perdita vite multiple
 
 // --- AVVIO ---
 window.onload = () => {
@@ -29,6 +30,17 @@ function getDeviceUID() {
         if (document.getElementById('chat-user-name')) document.getElementById('chat-user-name').value = savedName;
     }
     return uid;
+}
+
+// FIX iOS: Funzione per bloccare i doppi danni da tap multipli
+function loseLife() {
+    let now = Date.now();
+    if (now - lastDamageTime < 300) return; // 300ms di invulnerabilità ai doppi tocchi
+    lastDamageTime = now;
+    lives--;
+    flashStage('#ef4444');
+    updateHUD();
+    if (lives <= 0) gameOver();
 }
 
 // --- CHAT SYSTEM ---
@@ -53,7 +65,6 @@ function loadChat() {
                 let d = new Date(m.time);
                 let timeStr = d.getHours().toString().padStart(2, '0') + ":" + d.getMinutes().toString().padStart(2, '0');
                 let nameStyle = m.name.toLowerCase().includes("re panza") ? "color:var(--gold);" : "color:var(--accent);";
-                // STRUTTURA HTML PER IL CSS (BANDIERINA ROSSA)
                 html += `
                 <div class="chat-msg">
                     <div class="chat-content-wrapper">
@@ -108,15 +119,13 @@ function openGame(gameName) {
     loadLeaderboard(gameName);
 }
 
-// --- SOSTITUISCI: startGameLogic ---
 function startGameLogic() {
     document.getElementById('game-instructions').classList.add('hidden');
     gameActive = true;
 
-    // TIMER GLOBALE - FIX: Escluso per Ratti e Simon
     const timerSpan = document.getElementById('game-timer').parentElement;
     if (currentGame !== 'ratti' && currentGame !== 'simon') {
-        timerSpan.style.display = 'inline'; // Mostra il timer
+        timerSpan.style.display = 'inline'; 
         let timerInt = setInterval(() => {
             if (!gameActive) { clearInterval(timerInt); return; }
             timeLeft--;
@@ -128,7 +137,7 @@ function startGameLogic() {
         }, 1000);
         gameIntervals.push(timerInt);
     } else {
-        timerSpan.style.display = 'none'; // Nasconde il timer graficamente
+        timerSpan.style.display = 'none'; 
     }
 
     if (currentGame === 'cosciotto') initCosciotto();
@@ -144,7 +153,7 @@ function stopAllGames() {
     gameIntervals = [];
 }
 
-function closeGame() {
+window.closeGame = function () {
     stopAllGames();
     document.getElementById('gameModal').style.display = 'none';
 }
@@ -177,19 +186,17 @@ function flashStage(color) {
     setTimeout(() => stage.style.boxShadow = "none", 200);
 }
 
-// --- GIOCO: COSCIOTTO (FIX CESTINO) ---
+// --- GIOCO: COSCIOTTO ---
 function initCosciotto() {
     const stage = document.getElementById('game-stage');
     stage.innerHTML = `<div id="basket">🧺</div>`;
     const basket = document.getElementById('basket');
 
-    // Funzione movimento corretta
     function move(clientX) {
         if (!gameActive) return;
         const rect = stage.getBoundingClientRect();
-        let x = clientX - rect.left; // Posizione relativa al box
+        let x = clientX - rect.left; 
 
-        // Limiti (il transform -50% nel CSS gestisce la centratura visiva)
         if (x < 0) x = 0;
         if (x > rect.width) x = rect.width;
 
@@ -214,21 +221,23 @@ function initCosciotto() {
             let top = parseFloat(item.style.top);
             let stageH = stage.offsetHeight;
 
-            // Collisione
             if (top > stageH - 80 && top < stageH - 10) {
                 const iR = item.getBoundingClientRect();
                 const bR = basket.getBoundingClientRect();
-                // Sovrapposizione semplice
                 if (iR.right > bR.left + 10 && iR.left < bR.right - 10) {
-                    if (isBomb) { lives--; flashStage('red'); } else { score += 10; }
-                    updateHUD(); item.remove(); clearInterval(fall);
-                    if (lives <= 0) gameOver(); return;
+                    if (isBomb) { 
+                        loseLife(); 
+                    } else { 
+                        score += 10; 
+                        updateHUD(); 
+                    }
+                    item.remove(); clearInterval(fall);
+                    return;
                 }
             }
             if (top > stageH) {
-                if (!isBomb) { lives--; updateHUD(); }
+                if (!isBomb) { loseLife(); }
                 item.remove(); clearInterval(fall);
-                if (lives <= 0) gameOver();
             } else { item.style.top = (top + speed) + 'px'; }
         }, 20);
         gameIntervals.push(fall);
@@ -236,7 +245,7 @@ function initCosciotto() {
     gameIntervals.push(spawner);
 }
 
-// --- GIOCO: RATTI & GATTI (FIX LOGICA) ---
+// --- GIOCO: RATTI & GATTI ---
 function initRatti() {
     const stage = document.getElementById('game-stage');
     let html = '<div class="grid-ratti">';
@@ -256,11 +265,9 @@ function initRatti() {
 
         if (mole.classList.contains('up')) { setTimeout(peep, 100); return; }
 
-        // GATTO o TOPO?
-        const isCat = Math.random() < 0.3; // 30% Gatto
+        const isCat = Math.random() < 0.3; 
 
-        // Pulisci classi e imposta
-        mole.className = 'mole'; // Reset classi
+        mole.className = 'mole'; 
         if (isCat) {
             mole.innerText = "🐱";
             mole.dataset.type = "cat";
@@ -269,7 +276,7 @@ function initRatti() {
             mole.dataset.type = "rat";
         }
 
-        mole.classList.add('up'); // Sali!
+        mole.classList.add('up'); 
 
         let stayTime = Math.max(450, 1000 - (score * 5));
 
@@ -283,28 +290,27 @@ function initRatti() {
 }
 
 window.whack = function (e, mole) {
-    e.stopPropagation();
+    if (e) { e.preventDefault(); e.stopPropagation(); }
     if (!mole.classList.contains('up') || !gameActive) return;
 
     if (mole.dataset.type === "cat") {
-        lives--; flashStage('#ef4444'); mole.innerText = "😾";
+        loseLife(); mole.innerText = "😾";
     } else {
-        score += 10; mole.innerText = "💥";
+        score += 10; mole.innerText = "💥"; updateHUD();
     }
-    updateHUD(); mole.classList.remove('up');
-    if (lives <= 0) gameOver();
+    mole.classList.remove('up');
 };
 
 window.missRat = function (e) {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
     if (!gameActive) return;
-    lives--; flashStage('#ef4444'); updateHUD();
-    if (lives <= 0) gameOver();
+    loseLife();
 }
 
-// --- ALTRI GIOCHI (Invariati) ---
+// --- GIOCO: FRECCETTE ---
 function initFreccette() {
     const stage = document.getElementById('game-stage');
-    stage.innerHTML = `<div class="center-mark"></div><div id="dart-target"></div><button onpointerdown="throwDart()" class="btn-action" style="position:absolute; bottom:20px; left:50%; transform:translateX(-50%); width:120px; z-index:200;">TIRA!</button>`;
+    stage.innerHTML = `<div class="center-mark"></div><div id="dart-target"></div><button onpointerdown="throwDart(event)" class="btn-action" style="position:absolute; bottom:20px; left:50%; transform:translateX(-50%); width:120px; z-index:200;">TIRA!</button>`;
     const target = document.getElementById('dart-target');
     let angle = 0;
     let loop = setInterval(() => {
@@ -318,17 +324,23 @@ function initFreccette() {
     gameIntervals.push(loop);
 }
 
-window.throwDart = function () {
+window.throwDart = function (e) {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
     if (!gameActive) return;
     const t = document.getElementById('dart-target');
-    const d = getDist(parseFloat(t.dataset.x || 0), parseFloat(t.dataset.y || 0), 0, 0);
+    // Calcolo distanza tra centro e div bersaglio
+    const dx = parseFloat(t.dataset.x || 0);
+    const dy = parseFloat(t.dataset.y || 0);
+    const d = Math.sqrt(dx * dx + dy * dy); // Implementato direttamente al posto di getDist
+    
     if (d < 15) { score += 50; flashStage('#34d399'); }
     else if (d < 40) { score += 20; flashStage('#fbbf24'); }
     else if (d < 70) { score += 5; flashStage('#60a5fa'); }
-    else { lives--; flashStage('red'); }
-    updateHUD(); if (lives <= 0) gameOver();
+    else { loseLife(); }
+    updateHUD();
 };
 
+// --- GIOCO: BARILI ---
 function initBarili() {
     const stage = document.getElementById('game-stage');
     stage.innerHTML = `<div id="tower-world"><div id="moving-block"></div></div>`;
@@ -358,7 +370,7 @@ function initBarili() {
             const oR = Math.min(pos + w, prevLeft + prevWidth);
             overlap = oR - oL; newLeft = oL;
         }
-        if (overlap <= 0) { lives = 0; gameOver(); return; }
+        if (overlap <= 0) { lives = 0; gameOver(); return; } // Per design: 1 errore = Game Over
         const b = document.createElement('div');
         b.className = 'barile'; b.id = `barile-${level}`;
         b.style.width = overlap + 'px'; b.style.left = newLeft + 'px';
@@ -370,10 +382,9 @@ function initBarili() {
     };
 }
 
-// --- SOSTITUISCI: initSimon ---
+// --- GIOCO: SIMON ---
 function initSimon() {
     const stage = document.getElementById('game-stage');
-    // FIX iOS: Aggiunto passaggio dell'evento "event" ai pointerdown
     stage.innerHTML = `<div class="simon-grid">
         <div class="simon-btn" style="background:#ef4444" onpointerdown="clkS(event, 0)"></div>
         <div class="simon-btn" style="background:#3b82f6" onpointerdown="clkS(event, 1)"></div>
@@ -383,7 +394,7 @@ function initSimon() {
     sSeq = []; setTimeout(playS, 1000);
 }
 
-let sSeq = [], sStep = 0, sClick = false;
+let sSeq = [], sStep = 0, sClick = false, lastSimonClick = 0;
 function playS() {
     if (!gameActive) return;
     sStep = 0; sClick = false;
@@ -404,14 +415,18 @@ function flashS(idx) {
     setTimeout(() => b[idx].classList.remove('active-light'), 300);
 }
 
-// --- SOSTITUISCI: clkS ---
 window.clkS = function (e, idx) {
-    // FIX iOS: Ferma la propagazione e i tocchi fantasma
     if (e) { e.preventDefault(); e.stopPropagation(); }
     
+    // FIX iOS: Annulla tocchi ripetuti in 100 millisecondi (elimina il game over istantaneo)
+    let now = Date.now();
+    if (now - lastSimonClick < 100) return; 
+    lastSimonClick = now;
+
     if (!sClick || !gameActive) return;
     flashS(idx);
-    if (idx !== sSeq[sStep]) { lives = 0; gameOver(); return; }
+    
+    if (idx !== sSeq[sStep]) { lives = 0; gameOver(); return; } // Per design: 1 errore = Game Over
     sStep++;
     if (sStep >= sSeq.length) { score += sSeq.length * 10; updateHUD(); sClick = false; setTimeout(playS, 1000); }
 };
