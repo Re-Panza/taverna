@@ -8,7 +8,7 @@ let lives = 3;
 let timeLeft = 60;
 let gameActive = false;
 let gameIntervals = [];
-let lastDamageTime = 0; // FIX iOS: Previene perdita vite multiple
+let lastDamageTime = 0;
 
 // --- AVVIO ---
 window.onload = () => {
@@ -35,7 +35,7 @@ function getDeviceUID() {
 // FIX iOS: Funzione per bloccare i doppi danni da tap multipli
 function loseLife() {
     let now = Date.now();
-    if (now - lastDamageTime < 300) return; // 300ms di invulnerabilità ai doppi tocchi
+    if (now - lastDamageTime < 300) return; 
     lastDamageTime = now;
     lives--;
     flashStage('#ef4444');
@@ -103,7 +103,7 @@ const RULES = {
 
 function openGame(gameName) {
     currentGame = gameName;
-    score = 0; lives = 3; timeLeft = 60; // RESET TIMER
+    score = 0; lives = 3; timeLeft = 60; 
 
     document.getElementById('gameModal').style.display = 'flex';
     document.getElementById('game-stage').innerHTML = '';
@@ -328,10 +328,9 @@ window.throwDart = function (e) {
     if (e) { e.preventDefault(); e.stopPropagation(); }
     if (!gameActive) return;
     const t = document.getElementById('dart-target');
-    // Calcolo distanza tra centro e div bersaglio
     const dx = parseFloat(t.dataset.x || 0);
     const dy = parseFloat(t.dataset.y || 0);
-    const d = Math.sqrt(dx * dx + dy * dy); // Implementato direttamente al posto di getDist
+    const d = Math.sqrt(dx * dx + dy * dy); 
     
     if (d < 15) { score += 50; flashStage('#34d399'); }
     else if (d < 40) { score += 20; flashStage('#fbbf24'); }
@@ -370,7 +369,7 @@ function initBarili() {
             const oR = Math.min(pos + w, prevLeft + prevWidth);
             overlap = oR - oL; newLeft = oL;
         }
-        if (overlap <= 0) { lives = 0; gameOver(); return; } // Per design: 1 errore = Game Over
+        if (overlap <= 0) { lives = 0; updateHUD(); gameOver(); return; } 
         const b = document.createElement('div');
         b.className = 'barile'; b.id = `barile-${level}`;
         b.style.width = overlap + 'px'; b.style.left = newLeft + 'px';
@@ -385,11 +384,12 @@ function initBarili() {
 // --- GIOCO: SIMON ---
 function initSimon() {
     const stage = document.getElementById('game-stage');
+    // FIX iOS DEFINITIVO: Cambiato onpointerdown con onclick per evitare l'event ghosting
     stage.innerHTML = `<div class="simon-grid">
-        <div class="simon-btn" style="background:#ef4444" onpointerdown="clkS(event, 0)"></div>
-        <div class="simon-btn" style="background:#3b82f6" onpointerdown="clkS(event, 1)"></div>
-        <div class="simon-btn" style="background:#34d399" onpointerdown="clkS(event, 2)"></div>
-        <div class="simon-btn" style="background:#fbbf24" onpointerdown="clkS(event, 3)"></div>
+        <div class="simon-btn" style="background:#ef4444" onclick="clkS(event, 0)"></div>
+        <div class="simon-btn" style="background:#3b82f6" onclick="clkS(event, 1)"></div>
+        <div class="simon-btn" style="background:#34d399" onclick="clkS(event, 2)"></div>
+        <div class="simon-btn" style="background:#fbbf24" onclick="clkS(event, 3)"></div>
     </div><div id="simon-msg" style="position:absolute; top:50%; width:100%; text-align:center; color:#fff; font-size:24px; font-weight:bold; pointer-events:none; text-shadow:0 0 10px #000;"></div>`;
     sSeq = []; setTimeout(playS, 1000);
 }
@@ -418,15 +418,20 @@ function flashS(idx) {
 window.clkS = function (e, idx) {
     if (e) { e.preventDefault(); e.stopPropagation(); }
     
-    // FIX iOS: Annulla tocchi ripetuti in 100 millisecondi (elimina il game over istantaneo)
+    // Antirimbalzo rinforzato a 300ms per sicurezza totale
     let now = Date.now();
-    if (now - lastSimonClick < 100) return; 
+    if (now - lastSimonClick < 300) return; 
     lastSimonClick = now;
 
     if (!sClick || !gameActive) return;
     flashS(idx);
     
-    if (idx !== sSeq[sStep]) { lives = 0; gameOver(); return; } // Per design: 1 errore = Game Over
+    if (idx !== sSeq[sStep]) { 
+        lives = 0; 
+        updateHUD(); // Adesso i cuori diventano zero prima del modale
+        gameOver(); 
+        return; 
+    } 
     sStep++;
     if (sStep >= sSeq.length) { score += sSeq.length * 10; updateHUD(); sClick = false; setTimeout(playS, 1000); }
 };
