@@ -82,7 +82,25 @@ body {
 /* --- MODALE GIOCO --- */
 .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.95); z-index: 99999; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
 .modal-content { background: var(--card); border: 1px solid var(--gold); width: 95%; max-width: 500px; height: 90vh; border-radius: 20px; position: relative; display: flex; flex-direction: column; padding: 15px; }
-.close-btn { position: absolute; top: -15px; right: -10px; background: var(--danger); color: white; width: 40px; height: 40px; border-radius: 50%; text-align: center; line-height: 40px; font-weight: bold; cursor: pointer; border: 3px solid var(--bg); z-index: 200; font-size: 24px; }
+/* --- FIX CHIUSURA SU iOS --- */
+.close-btn { 
+    position: absolute; 
+    top: -15px; 
+    right: -10px; 
+    background: var(--danger); 
+    color: white; 
+    width: 44px; /* Ingresso minimo consigliato per dita su iOS */
+    height: 44px; 
+    border-radius: 50%; 
+    text-align: center; 
+    line-height: 40px; 
+    font-weight: bold; 
+    cursor: pointer; 
+    border: 3px solid var(--bg); 
+    z-index: 999999; /* Primissimo piano assoluto */
+    font-size: 24px; 
+    touch-action: manipulation; /* Previene lag e finti doppi tocchi */
+}
 .game-header-modal { display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 10px; flex-shrink: 0; flex-direction: column; }
 #modal-title { margin: 0; color: var(--gold); font-family: 'MedievalSharp', cursive; text-align: center; }
 .hud { width: 100%; display: flex; justify-content: space-around; color: var(--text); font-weight: bold; margin-top:5px; }
@@ -106,8 +124,27 @@ body {
 .center-mark { position: absolute; top: 50%; left: 50%; width: 10px; height: 10px; background: #00ff00; border-radius: 50%; transform: translate(-50%, -50%); z-index: 50; box-shadow: 0 0 10px #0f0; }
 
 #tower-world { position: absolute; width: 100%; height: 100%; bottom: 0; left: 0; transition: transform 0.3s; }
-.barile { position: absolute; height: 30px; background: #d35400; border: 2px solid #fff; border-radius: 4px; box-sizing: border-box; z-index: 5; }
-#moving-block { position: absolute; height: 30px; background: #e67e22; border: 2px solid #fff; border-radius: 4px; z-index: 100; bottom: 0; }
+
+/* --- GRAFICA BARILI MIGLIORATA --- */
+.barile { 
+    position: absolute; 
+    height: 30px; 
+    background: linear-gradient(to bottom, #8b4513, #5d2e0a); /* Effetto legno */
+    border: 2px solid #3e2723; 
+    border-radius: 6px; 
+    box-shadow: inset 0 0 8px rgba(0,0,0,0.6); /* Profondità */
+    box-sizing: border-box; 
+    z-index: 5; 
+}
+#moving-block { 
+    position: absolute; 
+    height: 30px; 
+    background: linear-gradient(to bottom, #d35400, #a04000); 
+    border: 2px solid #fff; 
+    border-radius: 6px; 
+    z-index: 100; 
+    bottom: 0; 
+}
 
 .simon-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 20px; height: 100%; width: 100%; }
 .simon-btn { border-radius: 10px; opacity: 0.3; border: 2px solid #fff; width: 100%; height: 100%; }
