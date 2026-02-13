@@ -96,7 +96,7 @@
 
     <div id="gameModal" class="modal-overlay">
         <div class="modal-content">
-            <div class="close-btn" onclick="closeGame()">×</div>
+            <button class="close-btn" onclick="closeGame()" onpointerdown="closeGame(); event.preventDefault();">×</button>
 
             <div class="game-header-modal">
                 <h2 id="modal-title">GIOCO</h2>
