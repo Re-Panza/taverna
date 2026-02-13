@@ -108,21 +108,28 @@ function openGame(gameName) {
     loadLeaderboard(gameName);
 }
 
+// --- SOSTITUISCI: startGameLogic ---
 function startGameLogic() {
     document.getElementById('game-instructions').classList.add('hidden');
     gameActive = true;
 
-    // TIMER GLOBALE - FIX
-    let timerInt = setInterval(() => {
-        if (!gameActive) { clearInterval(timerInt); return; }
-        timeLeft--;
-        updateHUD();
-        if (timeLeft <= 0) {
-            document.getElementById('end-reason').innerText = "⏳ TEMPO SCADUTO!";
-            gameOver();
-        }
-    }, 1000);
-    gameIntervals.push(timerInt);
+    // TIMER GLOBALE - FIX: Escluso per Ratti e Simon
+    const timerSpan = document.getElementById('game-timer').parentElement;
+    if (currentGame !== 'ratti' && currentGame !== 'simon') {
+        timerSpan.style.display = 'inline'; // Mostra il timer
+        let timerInt = setInterval(() => {
+            if (!gameActive) { clearInterval(timerInt); return; }
+            timeLeft--;
+            updateHUD();
+            if (timeLeft <= 0) {
+                document.getElementById('end-reason').innerText = "⏳ TEMPO SCADUTO!";
+                gameOver();
+            }
+        }, 1000);
+        gameIntervals.push(timerInt);
+    } else {
+        timerSpan.style.display = 'none'; // Nasconde il timer graficamente
+    }
 
     if (currentGame === 'cosciotto') initCosciotto();
     else if (currentGame === 'ratti') initRatti();
@@ -363,13 +370,15 @@ function initBarili() {
     };
 }
 
+// --- SOSTITUISCI: initSimon ---
 function initSimon() {
     const stage = document.getElementById('game-stage');
+    // FIX iOS: Aggiunto passaggio dell'evento "event" ai pointerdown
     stage.innerHTML = `<div class="simon-grid">
-        <div class="simon-btn" style="background:#ef4444" onpointerdown="clkS(0)"></div>
-        <div class="simon-btn" style="background:#3b82f6" onpointerdown="clkS(1)"></div>
-        <div class="simon-btn" style="background:#34d399" onpointerdown="clkS(2)"></div>
-        <div class="simon-btn" style="background:#fbbf24" onpointerdown="clkS(3)"></div>
+        <div class="simon-btn" style="background:#ef4444" onpointerdown="clkS(event, 0)"></div>
+        <div class="simon-btn" style="background:#3b82f6" onpointerdown="clkS(event, 1)"></div>
+        <div class="simon-btn" style="background:#34d399" onpointerdown="clkS(event, 2)"></div>
+        <div class="simon-btn" style="background:#fbbf24" onpointerdown="clkS(event, 3)"></div>
     </div><div id="simon-msg" style="position:absolute; top:50%; width:100%; text-align:center; color:#fff; font-size:24px; font-weight:bold; pointer-events:none; text-shadow:0 0 10px #000;"></div>`;
     sSeq = []; setTimeout(playS, 1000);
 }
@@ -395,7 +404,11 @@ function flashS(idx) {
     setTimeout(() => b[idx].classList.remove('active-light'), 300);
 }
 
-window.clkS = function (idx) {
+// --- SOSTITUISCI: clkS ---
+window.clkS = function (e, idx) {
+    // FIX iOS: Ferma la propagazione e i tocchi fantasma
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    
     if (!sClick || !gameActive) return;
     flashS(idx);
     if (idx !== sSeq[sStep]) { lives = 0; gameOver(); return; }
