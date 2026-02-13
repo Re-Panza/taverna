@@ -82,6 +82,7 @@ body {
 /* --- MODALE GIOCO --- */
 .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.95); z-index: 99999; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
 .modal-content { background: var(--card); border: 1px solid var(--gold); width: 95%; max-width: 500px; height: 90vh; border-radius: 20px; position: relative; display: flex; flex-direction: column; padding: 15px; }
+
 /* --- FIX CHIUSURA SU iOS --- */
 .close-btn { 
     position: absolute; 
@@ -89,18 +90,21 @@ body {
     right: -10px; 
     background: var(--danger); 
     color: white; 
-    width: 44px; /* Ingresso minimo consigliato per dita su iOS */
+    width: 44px; 
     height: 44px; 
     border-radius: 50%; 
-    text-align: center; 
-    line-height: 40px; 
-    font-weight: bold; 
-    cursor: pointer; 
     border: 3px solid var(--bg); 
-    z-index: 999999; /* Primissimo piano assoluto */
+    z-index: 999999; 
     font-size: 24px; 
-    touch-action: manipulation; /* Previene lag e finti doppi tocchi */
+    touch-action: manipulation; 
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0; 
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
 }
+
 .game-header-modal { display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 10px; flex-shrink: 0; flex-direction: column; }
 #modal-title { margin: 0; color: var(--gold); font-family: 'MedievalSharp', cursive; text-align: center; }
 .hud { width: 100%; display: flex; justify-content: space-around; color: var(--text); font-weight: bold; margin-top:5px; }
@@ -162,13 +166,18 @@ input[type="text"] { width: 100%; padding: 12px; margin-bottom: 5px; border-radi
 .leaderboard-section li { border-bottom: 1px solid var(--border); padding: 4px 0; display: flex; justify-content: space-between; color: var(--muted); }
 .leaderboard-section li:first-child { color: var(--gold); font-weight: bold; }
 
-/* AI & FOOTER */
+/* STILE UNIFICATO AI ASSISTANT & FOOTER */
 .paypal-footer { text-align: center; margin-top: 40px; padding: 30px 20px; border-top: 1px solid var(--border); }
 .paypal-link { text-decoration: none; font-weight: 700; font-size: 14px; background: #0070ba; color: #fff; padding: 12px 28px; border-radius: 50px; box-shadow: 0 4px 15px rgba(0, 112, 186, 0.3); }
+
 #ai-assistant-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; }
-#ai-button { width: 70px; height: 70px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.4); border: 2px solid var(--accent); overflow: hidden; }
+#ai-button { width: 70px; height: 70px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4); overflow: hidden; border: 2px solid var(--accent); }
 #ai-button img { width: 100%; height: 100%; object-fit: cover; }
-#ai-window { display: none; position: absolute; bottom: 85px; right: 0; width: 85vw; max-width: 320px; background: var(--card); border: 1px solid var(--accent); border-radius: 20px; padding: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); backdrop-filter: blur(10px); }
+#ai-window { display: none; position: absolute; bottom: 85px; right: 0; width: 85vw; max-width: 320px; background: var(--card); border: 1px solid var(--accent); border-radius: 20px; padding: 15px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6); backdrop-filter: blur(10px); }
+.ai-header { color: var(--accent); font-weight: bold; margin-bottom: 10px; display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 5px; }
+#ai-content { max-height: 250px; overflow-y: auto; margin-bottom: 10px; font-size: 13px; color: var(--text); }
+.ai-input-area { display: flex; gap: 5px; border-top: 1px solid var(--border); padding-top: 10px; }
+#ai-input { flex: 1; background: #000; border: 1px solid var(--border); color: #fff; border-radius: 5px; padding: 8px; font-size: 12px; }
+#ai-send-btn { background: var(--accent); border: none; border-radius: 5px; padding: 5px 15px; cursor: pointer; font-weight: bold; color: #000; }
 .user-msg { color: var(--accent); margin: 5px 0; font-size: 13px; }
 .bot-msg { color: #fff; margin: 5px 0; font-size: 13px; }
-.ai-header { color: var(--accent); font-weight: bold; margin-bottom: 10px; display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); }
